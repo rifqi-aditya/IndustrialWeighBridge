@@ -2,9 +2,11 @@ package com.rifqi.industrialweighbridge.di
 
 import com.rifqi.industrialweighbridge.data.repository.SqlDelightDriverRepository
 import com.rifqi.industrialweighbridge.data.repository.SqlDelightProductRepository
+import com.rifqi.industrialweighbridge.data.repository.SqlDelightTransactionRepository
 import com.rifqi.industrialweighbridge.data.repository.SqlDelightVehicleRepository
 import com.rifqi.industrialweighbridge.domain.repository.DriverRepository
 import com.rifqi.industrialweighbridge.domain.repository.ProductRepository
+import com.rifqi.industrialweighbridge.domain.repository.TransactionRepository
 import com.rifqi.industrialweighbridge.domain.repository.VehicleRepository
 import org.koin.dsl.module
 
