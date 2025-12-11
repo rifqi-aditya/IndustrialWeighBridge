@@ -36,6 +36,12 @@ kotlin {
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+
+            // Tambahkan ini untuk test Flow/Suspend functions
+            implementation(libs.kotlinx.coroutines.test)
+
+            // Tambahkan driver SQLite agar Test bisa jalan di database memori
+            implementation(libs.sqldelight.driver.sqlite)
         }
 
         jvmMain.dependencies {
