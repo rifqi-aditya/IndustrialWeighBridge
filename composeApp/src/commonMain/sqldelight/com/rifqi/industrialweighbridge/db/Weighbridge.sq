@@ -1,0 +1,141 @@
+import com.rifqi.industrialweighbridge.db.TransactionStatus;
+import com.rifqi.industrialweighbridge.db.UserRole;
+
+-- FILE: Weighbridge.sq
+
+CREATE TABLE User (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    role TEXT AS UserRole NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE Vehicle (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    plate_number TEXT NOT NULL UNIQUE,
+    description TEXT,
+    tare_weight REAL
+);
+
+CREATE TABLE Driver (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    license_no TEXT
+);
+
+CREATE TABLE Product (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    code TEXT
+);
+
+CREATE TABLE WeighingTransaction (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    ticket_number TEXT NOT NULL UNIQUE,
+
+    -- Foreign Keys
+    vehicle_id INTEGER,
+    driver_id INTEGER,
+    product_id INTEGER,
+    user_id INTEGER, -- Operator
+
+    -- Weigh In Data
+    weigh_in_timestamp TEXT NOT NULL,
+    weigh_in_weight REAL NOT NULL,
+
+    -- Weigh Out Data
+    weigh_out_timestamp TEXT,
+    weigh_out_weight REAL,
+
+    -- Result
+    net_weight REAL,
+    status TEXT AS TransactionStatus NOT NULL DEFAULT 'OPEN',
+    is_manual INTEGER NOT NULL DEFAULT 0, -- 0=Auto, 1=Manual
+
+    FOREIGN KEY (vehicle_id) REFERENCES Vehicle(id),
+    FOREIGN KEY (driver_id) REFERENCES Driver(id),
+    FOREIGN KEY (product_id) REFERENCES Product(id),
+    FOREIGN KEY (user_id) REFERENCES User(id)
+);
+
+-- Index agar pencarian cepat
+CREATE INDEX idx_transaction_ticket ON WeighingTransaction(ticket_number);
+CREATE INDEX idx_vehicle_plate ON Vehicle(plate_number);
+
+-- ==========================================
+-- 2. QUERIES (Fungsi Kotlin yang akan digenerate)
+-- ==========================================
+
+-- A. USER Queries
+selectUserByUsername:
+SELECT * FROM User WHERE username = ?;
+
+insertUser:
+INSERT INTO User (username, password_hash, role) VALUES (?, ?, ?);
+
+-- B. MASTER DATA Queries
+-- Vehicle
+selectAllVehicles:
+SELECT * FROM Vehicle ORDER BY plate_number ASC;
+
+insertVehicle:
+INSERT OR IGNORE INTO Vehicle (plate_number, description, tare_weight) VALUES (?, ?, ?);
+
+-- Driver
+selectAllDrivers:
+SELECT * FROM Driver ORDER BY name ASC;
+
+insertDriver:
+INSERT INTO Driver (name, license_no) VALUES (?, ?);
+
+-- Product
+selectAllProducts:
+SELECT * FROM Product ORDER BY name ASC;
+
+insertProduct:
+INSERT OR IGNORE INTO Product (name, code) VALUES (?, ?);
+
+-- C. TRANSACTION Queries
+-- Ambil semua transaksi (terbaru diatas)
+selectAllTransactions:
+SELECT
+    T.*,
+    V.plate_number,
+    D.name AS driver_name,
+    P.name AS product_name
+FROM WeighingTransaction T
+LEFT JOIN Vehicle V ON T.vehicle_id = V.id
+LEFT JOIN Driver D ON T.driver_id = D.id
+LEFT JOIN Product P ON T.product_id = P.id
+ORDER BY T.id DESC;
+
+-- Ambil transaksi yang masih 'OPEN' (Belum Weigh Out)
+selectOpenTransactions:
+SELECT
+    T.*,
+    V.plate_number
+FROM WeighingTransaction T
+LEFT JOIN Vehicle V ON T.vehicle_id = V.id
+WHERE T.status = 'OPEN'
+ORDER BY T.weigh_in_timestamp DESC;
+
+-- Simpan Weigh In (Masuk)
+insertWeighIn:
+INSERT INTO WeighingTransaction (
+    ticket_number, vehicle_id, driver_id, product_id, user_id,
+    weigh_in_timestamp, weigh_in_weight, status, is_manual
+) VALUES (?, ?, ?, ?, ?, ?, ?, 'OPEN', ?);
+
+-- Simpan Weigh Out (Keluar / Update)
+updateWeighOut:
+UPDATE WeighingTransaction
+SET weigh_out_timestamp = ?,
+    weigh_out_weight = ?,
+    net_weight = ?,
+    status = 'CLOSED'
+WHERE ticket_number = ?;
+
+-- Hapus Transaksi (Hanya Admin)
+deleteTransaction:
+DELETE FROM WeighingTransaction WHERE ticket_number = ?;
