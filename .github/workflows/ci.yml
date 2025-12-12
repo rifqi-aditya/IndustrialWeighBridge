@@ -34,4 +34,4 @@ jobs:
       # 5. JALANKAN TEST
       # Perintah ini akan menjalankan unit test di commonMain, jvmMain, dan androidMain
       - name: Run Unit Tests
-        run: ./gradlew :composeApp:commonTest
+        run: ./gradlew :composeApp:jvmTest
