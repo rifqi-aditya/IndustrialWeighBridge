@@ -1,0 +1,37 @@
+name: Industrial Weighbridge CI
+
+# Kapan action ini berjalan?
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest # Menggunakan komputer Linux virtual
+
+    steps:
+      # 1. Ambil kode terbaru dari repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Siapkan Java (JDK 17 standar untuk KMP/Android modern)
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 3. Siapkan Gradle (dengan caching otomatis biar cepat)
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      # 4. Berikan izin eksekusi ke gradlew (kadang hilang saat push dari Windows)
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      # 5. JALANKAN TEST
+      # Perintah ini akan menjalankan unit test di commonMain, jvmMain, dan androidMain
+      - name: Run Unit Tests
+        run: ./gradlew test
