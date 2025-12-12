@@ -3,7 +3,7 @@ name: Industrial Weighbridge CI
 # Kapan action ini berjalan?
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "**" ]
   pull_request:
     branches: [ "main", "master" ]
 
