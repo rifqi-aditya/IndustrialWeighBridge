@@ -3,6 +3,7 @@ package com.rifqi.industrialweighbridge
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.rifqi.industrialweighbridge.db.WeighbridgeDatabase
+import com.rifqi.industrialweighbridge.di.appModule
 import com.rifqi.industrialweighbridge.di.databaseModule
 import org.koin.core.context.GlobalContext.get
 import org.koin.core.context.startKoin
@@ -27,6 +28,9 @@ fun main() = application {
 
 fun initKoin() {
     startKoin {
-        modules(databaseModule)
+        modules(
+            appModule,      // Repository & Use Cases
+            databaseModule  // SqlDriver & Database Setup
+        )
     }
 }

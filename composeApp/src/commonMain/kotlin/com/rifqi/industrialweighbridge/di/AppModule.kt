@@ -26,8 +26,10 @@ val appModule = module {
         SqlDelightProductRepository(db = get())
     }
 
-    // --- Transaction Repository (Tetap) ---
+    // --- Transaction Repository ---
     single<TransactionRepository> {
         SqlDelightTransactionRepository(db = get())
     }
+
+
 }
