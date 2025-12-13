@@ -20,6 +20,8 @@ import com.rifqi.industrialweighbridge.domain.usecase.vehicle.AddVehicleUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.vehicle.DeleteVehicleUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.vehicle.GetAllVehiclesUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.vehicle.UpdateVehicleUseCase
+import com.rifqi.industrialweighbridge.presentation.viewmodel.DriverViewModel
+import com.rifqi.industrialweighbridge.presentation.viewmodel.VehicleViewModel
 import org.koin.dsl.module
 
 val appModule = module {
@@ -52,4 +54,8 @@ val appModule = module {
     factory { AddVehicleUseCase(get()) }
     factory { UpdateVehicleUseCase(get()) }
     factory { DeleteVehicleUseCase(get()) }
+
+    // --- ViewModels ---
+    factory { DriverViewModel(get(), get(), get(), get()) }
+    factory { VehicleViewModel(get(), get(), get(), get()) }
 }

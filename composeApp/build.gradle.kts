@@ -18,6 +18,7 @@ kotlin {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
+            implementation(compose.materialIconsExtended)
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
@@ -32,6 +33,12 @@ kotlin {
 
             // 2. Database Extensions (Agar bisa observe data secara real-time)
             implementation(libs.sqldelight.coroutines)
+
+            // 3. Navigation (Voyager)
+            implementation(libs.voyager.navigator)
+            implementation(libs.voyager.tabNavigator)
+            implementation(libs.voyager.transitions)
+            implementation(libs.voyager.koin)
         }
 
         commonTest.dependencies {

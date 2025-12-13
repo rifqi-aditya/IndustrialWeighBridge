@@ -12,6 +12,7 @@ coroutines-test = "1.8.1"
 sqldelight = "2.0.2"       # Database
 koin = "4.0.0"             # Dependency Injection (Compatible with Kotlin 2.x)
 jserialcomm = "2.11.0"     # Serial Port Hardware
+voyager = "1.1.0-beta02"   # Navigation
 
 [libraries]
 # --- Existing Libraries ---
@@ -34,6 +35,12 @@ jserialcomm = { module = "com.fazecast:jSerialComm", version.ref = "jserialcomm"
 # 3. Dependency Injection (Koin)
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
+
+# 4. Navigation (Voyager)
+voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
+voyager-tabNavigator = { module = "cafe.adriel.voyager:voyager-tab-navigator", version.ref = "voyager" }
+voyager-transitions = { module = "cafe.adriel.voyager:voyager-transitions", version.ref = "voyager" }
+voyager-koin = { module = "cafe.adriel.voyager:voyager-koin", version.ref = "voyager" }
 
 [plugins]
 # --- Existing Plugins ---
