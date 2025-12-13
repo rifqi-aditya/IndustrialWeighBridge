@@ -28,22 +28,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.rifqi.industrialweighbridge.db.Vehicle
+import com.rifqi.industrialweighbridge.db.Product
+import com.rifqi.industrialweighbridge.presentation.components.ProductCard
+import com.rifqi.industrialweighbridge.presentation.components.ProductFormDialog
 import com.rifqi.industrialweighbridge.presentation.components.SearchBar
-import com.rifqi.industrialweighbridge.presentation.components.VehicleCard
-import com.rifqi.industrialweighbridge.presentation.components.VehicleFormDialog
-import com.rifqi.industrialweighbridge.presentation.utils.WeightFormatter
-import com.rifqi.industrialweighbridge.presentation.viewmodel.VehicleViewModel
+import com.rifqi.industrialweighbridge.presentation.viewmodel.ProductViewModel
 import org.koin.compose.koinInject
 
 @Composable
-fun VehicleListScreen() {
-    val viewModel: VehicleViewModel = koinInject()
+fun ProductListScreen() {
+    val viewModel: ProductViewModel = koinInject()
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     var showAddDialog by remember { mutableStateOf(false) }
-    var editingVehicle by remember { mutableStateOf<Vehicle?>(null) }
+    var editingProduct by remember { mutableStateOf<Product?>(null) }
 
     // Show error snackbar
     LaunchedEffect(uiState.errorMessage) {
@@ -59,7 +58,7 @@ fun VehicleListScreen() {
                 ExtendedFloatingActionButton(
                         onClick = { showAddDialog = true },
                         icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                        text = { Text("Tambah Kendaraan") },
+                        text = { Text("Tambah Produk") },
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary
                 )
@@ -69,7 +68,7 @@ fun VehicleListScreen() {
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             // Header
             Text(
-                    text = "Manajemen Kendaraan",
+                    text = "Manajemen Produk",
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 16.dp)
@@ -79,7 +78,7 @@ fun VehicleListScreen() {
             SearchBar(
                     query = uiState.searchQuery,
                     onQueryChange = viewModel::onSearchQueryChange,
-                    placeholder = "Cari plat nomor atau deskripsi..."
+                    placeholder = "Cari nama atau kode produk..."
             )
 
             // Content
@@ -88,14 +87,13 @@ fun VehicleListScreen() {
                     CircularProgressIndicator()
                 }
             } else {
-                val filteredVehicles = viewModel.getFilteredVehicles()
+                val filteredProducts = viewModel.getFilteredProducts()
 
-                if (filteredVehicles.isEmpty()) {
+                if (filteredProducts.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
                                 text =
-                                        if (uiState.searchQuery.isEmpty())
-                                                "Belum ada data kendaraan"
+                                        if (uiState.searchQuery.isEmpty()) "Belum ada data produk"
                                         else "Tidak ditemukan",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -106,13 +104,12 @@ fun VehicleListScreen() {
                             contentPadding = PaddingValues(vertical = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(filteredVehicles, key = { it.id }) { vehicle ->
-                            VehicleCard(
-                                    plateNumber = vehicle.plate_number,
-                                    description = vehicle.description,
-                                    tareWeight = vehicle.tare_weight,
-                                    onEdit = { editingVehicle = vehicle },
-                                    onDelete = { viewModel.delete(vehicle.id) }
+                        items(filteredProducts, key = { it.id }) { product ->
+                            ProductCard(
+                                    name = product.name,
+                                    code = product.code,
+                                    onEdit = { editingProduct = product },
+                                    onDelete = { viewModel.delete(product.id) }
                             )
                         }
                     }
@@ -123,28 +120,26 @@ fun VehicleListScreen() {
 
     // Add Dialog
     if (showAddDialog) {
-        VehicleFormDialog(
+        ProductFormDialog(
                 isEdit = false,
                 onDismiss = { showAddDialog = false },
-                onConfirm = { plateNumber, description, tareWeight ->
-                    viewModel.add(plateNumber, description, tareWeight)
+                onConfirm = { name, code ->
+                    viewModel.add(name, code)
                     showAddDialog = false
                 }
         )
     }
 
     // Edit Dialog
-    editingVehicle?.let { vehicle ->
-        VehicleFormDialog(
+    editingProduct?.let { product ->
+        ProductFormDialog(
                 isEdit = true,
-                initialPlateNumber = vehicle.plate_number,
-                initialDescription = vehicle.description ?: "",
-                initialTareWeight = vehicle.tare_weight?.let { WeightFormatter.formatNumber(it) }
-                                ?: "",
-                onDismiss = { editingVehicle = null },
-                onConfirm = { plateNumber, description, tareWeight ->
-                    viewModel.update(vehicle.id, plateNumber, description, tareWeight)
-                    editingVehicle = null
+                initialName = product.name,
+                initialCode = product.code ?: "",
+                onDismiss = { editingProduct = null },
+                onConfirm = { name, code ->
+                    viewModel.update(product.id, name, code)
+                    editingProduct = null
                 }
         )
     }

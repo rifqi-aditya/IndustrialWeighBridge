@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.rifqi.industrialweighbridge.presentation.utils.WeightFormatter
 
 @Composable
 fun DriverFormDialog(
@@ -174,19 +175,22 @@ fun VehicleFormDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Tare Weight Field
+                // Tare Weight Field with auto-formatting
                 OutlinedTextField(
                         value = tareWeight,
-                        onValueChange = {
-                            tareWeight = it
+                        onValueChange = { newValue ->
+                            tareWeight = WeightFormatter.formatInputAsYouType(newValue)
                             weightError = false
                         },
                         label = { Text("Berat Kosong / Tare (kg)") },
+                        placeholder = { Text("Contoh: 1.234,56") },
                         isError = weightError,
                         supportingText =
                                 if (weightError) {
                                     { Text("Masukkan angka yang valid") }
-                                } else null,
+                                } else {
+                                    { Text("Format: 1.234,56 kg") }
+                                },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                 )
@@ -206,12 +210,7 @@ fun VehicleFormDialog(
                                     return@Button
                                 }
 
-                                val weight =
-                                        if (tareWeight.isBlank()) {
-                                            null
-                                        } else {
-                                            tareWeight.toDoubleOrNull()
-                                        }
+                                val weight = WeightFormatter.parseWeight(tareWeight)
 
                                 if (tareWeight.isNotBlank() && weight == null) {
                                     weightError = true
@@ -223,6 +222,91 @@ fun VehicleFormDialog(
                                         description.trim().ifEmpty { null },
                                         weight
                                 )
+                            },
+                            colors =
+                                    ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.primary
+                                    )
+                    ) { Text(if (isEdit) "Simpan" else "Tambah") }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ProductFormDialog(
+        isEdit: Boolean = false,
+        initialName: String = "",
+        initialCode: String = "",
+        onDismiss: () -> Unit,
+        onConfirm: (name: String, code: String?) -> Unit
+) {
+    var name by remember { mutableStateOf(initialName) }
+    var code by remember { mutableStateOf(initialCode) }
+    var nameError by remember { mutableStateOf(false) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors =
+                        CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(modifier = Modifier.padding(24.dp)) {
+                // Title
+                Text(
+                        text = if (isEdit) "Edit Produk" else "Tambah Produk",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Name Field
+                OutlinedTextField(
+                        value = name,
+                        onValueChange = {
+                            name = it
+                            nameError = false
+                        },
+                        label = { Text("Nama Produk *") },
+                        isError = nameError,
+                        supportingText =
+                                if (nameError) {
+                                    { Text("Nama wajib diisi") }
+                                } else null,
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Code Field
+                OutlinedTextField(
+                        value = code,
+                        onValueChange = { code = it },
+                        label = { Text("Kode Produk (Opsional)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Buttons
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    OutlinedButton(onClick = onDismiss) { Text("Batal") }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Button(
+                            onClick = {
+                                if (name.isBlank()) {
+                                    nameError = true
+                                } else {
+                                    onConfirm(name.trim(), code.trim().ifEmpty { null })
+                                }
                             },
                             colors =
                                     ButtonDefaults.buttonColors(

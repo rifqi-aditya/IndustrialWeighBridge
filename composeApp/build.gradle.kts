@@ -39,6 +39,9 @@ kotlin {
             implementation(libs.voyager.tabNavigator)
             implementation(libs.voyager.transitions)
             implementation(libs.voyager.koin)
+            
+            // Date/Time handling
+            implementation(libs.kotlinx.datetime)
         }
 
         commonTest.dependencies {
@@ -56,6 +59,9 @@ kotlin {
 
             // Dispatcher khusus UI Desktop (Swing)
             implementation(libs.kotlinx.coroutinesSwing)
+
+            // Date/Time (must be in jvmMain for runtime)
+            implementation(libs.kotlinx.datetime)
 
             // --- NEW: Desktop Specific Drivers ---
 

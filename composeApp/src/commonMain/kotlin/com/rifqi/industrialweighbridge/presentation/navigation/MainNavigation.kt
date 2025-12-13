@@ -49,9 +49,11 @@ private fun NavigationSideBar() {
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurface
     ) {
+        NavigationRailTabItem(WeighingTab)
         NavigationRailTabItem(DashboardTab)
         NavigationRailTabItem(DriversTab)
         NavigationRailTabItem(VehiclesTab)
+        NavigationRailTabItem(ProductsTab)
         NavigationRailTabItem(SettingsTab)
     }
 }
