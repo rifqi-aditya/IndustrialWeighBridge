@@ -8,23 +8,23 @@ import com.rifqi.industrialweighbridge.domain.repository.DriverRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 
-class SqlDelightDriverRepository(
-    db: WeighbridgeDatabase
-) : DriverRepository {
+class SqlDelightDriverRepository(db: WeighbridgeDatabase) : DriverRepository {
 
     private val queries = db.weighbridgeQueries
 
     override fun getAllDrivers(): Flow<List<Driver>> {
-        return queries.selectAllDrivers()
-            .asFlow()
-            .mapToList(Dispatchers.IO)
+        return queries.selectAllDrivers().asFlow().mapToList(Dispatchers.IO)
     }
 
     override suspend fun addDriver(name: String, licenseNo: String?) {
         queries.insertDriver(name, licenseNo)
     }
 
+    override suspend fun updateDriver(id: Long, name: String, licenseNo: String?) {
+        queries.updateDriver(name, licenseNo, id)
+    }
+
     override suspend fun deleteDriver(id: Long) {
-        // Implementasi delete nanti
+        queries.deleteDriver(id)
     }
 }

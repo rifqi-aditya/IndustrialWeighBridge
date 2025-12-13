@@ -6,5 +6,6 @@ import kotlinx.coroutines.flow.Flow
 interface DriverRepository {
     fun getAllDrivers(): Flow<List<Driver>>
     suspend fun addDriver(name: String, licenseNo: String?)
+    suspend fun updateDriver(id: Long, name: String, licenseNo: String?)
     suspend fun deleteDriver(id: Long)
 }

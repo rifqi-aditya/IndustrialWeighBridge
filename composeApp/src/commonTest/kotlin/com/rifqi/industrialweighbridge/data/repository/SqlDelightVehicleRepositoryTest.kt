@@ -323,4 +323,166 @@ class SqlDelightVehicleRepositoryTest {
                 "Deskripsi panjang harus tersimpan lengkap"
         )
     }
+
+    // ==========================================
+    // TEST CASES: updateVehicle
+    // ==========================================
+
+    @Test
+    fun `test updateVehicle updates plate number correctly`() = runTest {
+        // --- 1. GIVEN ---
+        repository.addVehicle("B 1234 OLD", "Truk Lama", 5000.0)
+        val vehicles = repository.getAllVehicles().first()
+        val vehicleId = vehicles[0].id
+
+        // --- 2. WHEN ---
+        repository.updateVehicle(vehicleId, "B 5678 NEW", "Truk Lama", 5000.0)
+
+        // --- 3. THEN ---
+        val updatedVehicles = repository.getAllVehicles().first()
+        assertEquals(1, updatedVehicles.size, "Jumlah kendaraan harus tetap 1")
+        assertEquals("B 5678 NEW", updatedVehicles[0].plate_number, "Plat nomor harus terupdate")
+    }
+
+    @Test
+    fun `test updateVehicle updates description correctly`() = runTest {
+        // --- 1. GIVEN ---
+        repository.addVehicle("B 1234 ABC", "Deskripsi Lama", 5000.0)
+        val vehicles = repository.getAllVehicles().first()
+        val vehicleId = vehicles[0].id
+
+        // --- 2. WHEN ---
+        repository.updateVehicle(vehicleId, "B 1234 ABC", "Deskripsi Baru", 5000.0)
+
+        // --- 3. THEN ---
+        val updatedVehicles = repository.getAllVehicles().first()
+        assertEquals("Deskripsi Baru", updatedVehicles[0].description, "Deskripsi harus terupdate")
+    }
+
+    @Test
+    fun `test updateVehicle updates tare weight correctly`() = runTest {
+        // --- 1. GIVEN ---
+        repository.addVehicle("B 1234 ABC", "Truk", 5000.0)
+        val vehicles = repository.getAllVehicles().first()
+        val vehicleId = vehicles[0].id
+
+        // --- 2. WHEN ---
+        repository.updateVehicle(vehicleId, "B 1234 ABC", "Truk", 6000.0)
+
+        // --- 3. THEN ---
+        val updatedVehicles = repository.getAllVehicles().first()
+        assertEquals(6000.0, updatedVehicles[0].tare_weight, "Tare weight harus terupdate")
+    }
+
+    @Test
+    fun `test updateVehicle updates all fields`() = runTest {
+        // --- 1. GIVEN ---
+        repository.addVehicle("OLD-PLATE", "Old Desc", 1000.0)
+        val vehicles = repository.getAllVehicles().first()
+        val vehicleId = vehicles[0].id
+
+        // --- 2. WHEN ---
+        repository.updateVehicle(vehicleId, "NEW-PLATE", "New Desc", 2000.0)
+
+        // --- 3. THEN ---
+        val updated = repository.getAllVehicles().first()[0]
+        assertEquals("NEW-PLATE", updated.plate_number)
+        assertEquals("New Desc", updated.description)
+        assertEquals(2000.0, updated.tare_weight)
+    }
+
+    @Test
+    fun `test updateVehicle can set nullable fields to null`() = runTest {
+        // --- 1. GIVEN ---
+        repository.addVehicle("B 1234 ABC", "Has Desc", 5000.0)
+        val vehicles = repository.getAllVehicles().first()
+        val vehicleId = vehicles[0].id
+
+        // --- 2. WHEN ---
+        repository.updateVehicle(vehicleId, "B 1234 ABC", null, null)
+
+        // --- 3. THEN ---
+        val updated = repository.getAllVehicles().first()[0]
+        assertNull(updated.description, "Description harus bisa diset ke null")
+        assertNull(updated.tare_weight, "Tare weight harus bisa diset ke null")
+    }
+
+    @Test
+    fun `test updateVehicle only affects specified vehicle`() = runTest {
+        // --- 1. GIVEN ---
+        repository.addVehicle("B 1111 AAA", "Truk A", 5000.0)
+        repository.addVehicle("B 2222 BBB", "Truk B", 4000.0)
+        val vehicles = repository.getAllVehicles().first()
+        val vehicleAId = vehicles.find { it.plate_number == "B 1111 AAA" }!!.id
+
+        // --- 2. WHEN ---
+        repository.updateVehicle(vehicleAId, "B 1111 NEW", "Truk A Updated", 5500.0)
+
+        // --- 3. THEN ---
+        val updatedVehicles = repository.getAllVehicles().first()
+        val vehicleA = updatedVehicles.find { it.id == vehicleAId }!!
+        val vehicleB = updatedVehicles.find { it.plate_number == "B 2222 BBB" }!!
+
+        assertEquals("B 1111 NEW", vehicleA.plate_number, "Vehicle A harus terupdate")
+        assertEquals("B 2222 BBB", vehicleB.plate_number, "Vehicle B harus tetap sama")
+        assertEquals("Truk B", vehicleB.description, "Vehicle B description harus tetap sama")
+    }
+
+    // ==========================================
+    // TEST CASES: deleteVehicle
+    // ==========================================
+
+    @Test
+    fun `test deleteVehicle removes vehicle correctly`() = runTest {
+        // --- 1. GIVEN ---
+        repository.addVehicle("B DELETE", "Akan Dihapus", 5000.0)
+        val vehicles = repository.getAllVehicles().first()
+        assertEquals(1, vehicles.size)
+        val vehicleId = vehicles[0].id
+
+        // --- 2. WHEN ---
+        repository.deleteVehicle(vehicleId)
+
+        // --- 3. THEN ---
+        val remaining = repository.getAllVehicles().first()
+        assertTrue(remaining.isEmpty(), "Database harus kosong setelah delete")
+    }
+
+    @Test
+    fun `test deleteVehicle only removes specified vehicle`() = runTest {
+        // --- 1. GIVEN ---
+        repository.addVehicle("B KEEP 1", "Keep 1", 5000.0)
+        repository.addVehicle("B DELETE", "Delete", 4000.0)
+        repository.addVehicle("B KEEP 2", "Keep 2", 3000.0)
+        val vehicles = repository.getAllVehicles().first()
+        assertEquals(3, vehicles.size)
+        val deleteId = vehicles.find { it.plate_number == "B DELETE" }!!.id
+
+        // --- 2. WHEN ---
+        repository.deleteVehicle(deleteId)
+
+        // --- 3. THEN ---
+        val remaining = repository.getAllVehicles().first()
+        assertEquals(2, remaining.size, "Harus tersisa 2 kendaraan")
+
+        val plates = remaining.map { it.plate_number }
+        assertTrue("B KEEP 1" in plates, "Vehicle Keep 1 harus tetap ada")
+        assertTrue("B KEEP 2" in plates, "Vehicle Keep 2 harus tetap ada")
+        assertTrue("B DELETE" !in plates, "Vehicle Delete harus sudah terhapus")
+    }
+
+    @Test
+    fun `test deleteVehicle with non-existent id does not affect data`() = runTest {
+        // --- 1. GIVEN ---
+        repository.addVehicle("B TETAP", "Tetap Ada", 5000.0)
+        val vehicles = repository.getAllVehicles().first()
+        assertEquals(1, vehicles.size)
+
+        // --- 2. WHEN ---
+        repository.deleteVehicle(99999L) // ID yang tidak ada
+
+        // --- 3. THEN ---
+        val remaining = repository.getAllVehicles().first()
+        assertEquals(1, remaining.size, "Data harus tetap ada")
+    }
 }

@@ -82,6 +82,12 @@ SELECT * FROM Vehicle ORDER BY plate_number ASC;
 insertVehicle:
 INSERT OR IGNORE INTO Vehicle (plate_number, description, tare_weight) VALUES (?, ?, ?);
 
+updateVehicle:
+UPDATE Vehicle SET plate_number = ?, description = ?, tare_weight = ? WHERE id = ?;
+
+deleteVehicle:
+DELETE FROM Vehicle WHERE id = ?;
+
 -- Driver
 selectAllDrivers:
 SELECT * FROM Driver ORDER BY name ASC;
@@ -89,12 +95,24 @@ SELECT * FROM Driver ORDER BY name ASC;
 insertDriver:
 INSERT INTO Driver (name, license_no) VALUES (?, ?);
 
+updateDriver:
+UPDATE Driver SET name = ?, license_no = ? WHERE id = ?;
+
+deleteDriver:
+DELETE FROM Driver WHERE id = ?;
+
 -- Product
 selectAllProducts:
 SELECT * FROM Product ORDER BY name ASC;
 
 insertProduct:
 INSERT OR IGNORE INTO Product (name, code) VALUES (?, ?);
+
+updateProduct:
+UPDATE Product SET name = ?, code = ? WHERE id = ?;
+
+deleteProduct:
+DELETE FROM Product WHERE id = ?;
 
 -- C. TRANSACTION Queries
 -- Ambil semua transaksi (terbaru diatas)

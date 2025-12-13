@@ -8,24 +8,28 @@ import com.rifqi.industrialweighbridge.domain.repository.VehicleRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 
-class SqlDelightVehicleRepository(
-    db: WeighbridgeDatabase
-) : VehicleRepository {
+class SqlDelightVehicleRepository(db: WeighbridgeDatabase) : VehicleRepository {
 
     private val queries = db.weighbridgeQueries
 
     override fun getAllVehicles(): Flow<List<Vehicle>> {
-        return queries.selectAllVehicles()
-            .asFlow()
-            .mapToList(Dispatchers.IO)
+        return queries.selectAllVehicles().asFlow().mapToList(Dispatchers.IO)
     }
 
     override suspend fun addVehicle(plateNumber: String, desc: String?, tare: Double?) {
         queries.insertVehicle(plateNumber, desc, tare)
     }
 
+    override suspend fun updateVehicle(
+            id: Long,
+            plateNumber: String,
+            desc: String?,
+            tare: Double?
+    ) {
+        queries.updateVehicle(plateNumber, desc, tare, id)
+    }
+
     override suspend fun deleteVehicle(id: Long) {
-        // Implementasi delete jika query sudah ada di .sq
-        // queries.deleteVehicle(id)
+        queries.deleteVehicle(id)
     }
 }

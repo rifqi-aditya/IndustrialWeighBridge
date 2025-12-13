@@ -159,4 +159,151 @@ class SqlDelightProductRepositoryTest {
         assertTrue(code1 in codes, "Kode 1 harus ada")
         assertTrue(code2 in codes, "Kode 2 harus ada")
     }
+
+    // ==========================================
+    // TEST CASES: updateProduct
+    // ==========================================
+
+    @Test
+    fun `test updateProduct updates name correctly`() = runTest {
+        // --- 1. GIVEN ---
+        repository.addProduct("Produk Lama", "PRD-001")
+        val products = repository.getAllProducts().first()
+        val productId = products[0].id
+
+        // --- 2. WHEN ---
+        repository.updateProduct(productId, "Produk Baru", "PRD-001")
+
+        // --- 3. THEN ---
+        val updatedProducts = repository.getAllProducts().first()
+        assertEquals(1, updatedProducts.size, "Jumlah produk harus tetap 1")
+        assertEquals("Produk Baru", updatedProducts[0].name, "Nama harus terupdate")
+        assertEquals("PRD-001", updatedProducts[0].code, "Code harus tetap sama")
+    }
+
+    @Test
+    fun `test updateProduct updates code correctly`() = runTest {
+        // --- 1. GIVEN ---
+        repository.addProduct("Pasir", "OLD-CODE")
+        val products = repository.getAllProducts().first()
+        val productId = products[0].id
+
+        // --- 2. WHEN ---
+        repository.updateProduct(productId, "Pasir", "NEW-CODE")
+
+        // --- 3. THEN ---
+        val updatedProducts = repository.getAllProducts().first()
+        assertEquals("Pasir", updatedProducts[0].name, "Nama harus tetap sama")
+        assertEquals("NEW-CODE", updatedProducts[0].code, "Code harus terupdate")
+    }
+
+    @Test
+    fun `test updateProduct updates both name and code`() = runTest {
+        // --- 1. GIVEN ---
+        repository.addProduct("Nama Lama", "CODE-LAMA")
+        val products = repository.getAllProducts().first()
+        val productId = products[0].id
+
+        // --- 2. WHEN ---
+        repository.updateProduct(productId, "Nama Baru", "CODE-BARU")
+
+        // --- 3. THEN ---
+        val updatedProducts = repository.getAllProducts().first()
+        assertEquals("Nama Baru", updatedProducts[0].name)
+        assertEquals("CODE-BARU", updatedProducts[0].code)
+    }
+
+    @Test
+    fun `test updateProduct can set code to null`() = runTest {
+        // --- 1. GIVEN ---
+        repository.addProduct("Produk", "PRD-123")
+        val products = repository.getAllProducts().first()
+        val productId = products[0].id
+
+        // --- 2. WHEN ---
+        repository.updateProduct(productId, "Produk", null)
+
+        // --- 3. THEN ---
+        val updatedProducts = repository.getAllProducts().first()
+        assertNull(updatedProducts[0].code, "Code harus bisa diset ke null")
+    }
+
+    @Test
+    fun `test updateProduct only affects specified product`() = runTest {
+        // --- 1. GIVEN ---
+        repository.addProduct("Produk A", "CODE-A")
+        repository.addProduct("Produk B", "CODE-B")
+        val products = repository.getAllProducts().first()
+        val productAId = products.find { it.name == "Produk A" }!!.id
+
+        // --- 2. WHEN ---
+        repository.updateProduct(productAId, "Produk A Updated", "CODE-A-NEW")
+
+        // --- 3. THEN ---
+        val updatedProducts = repository.getAllProducts().first()
+        val productA = updatedProducts.find { it.id == productAId }!!
+        val productB = updatedProducts.find { it.name == "Produk B" }!!
+
+        assertEquals("Produk A Updated", productA.name, "Produk A harus terupdate")
+        assertEquals("Produk B", productB.name, "Produk B harus tetap sama")
+        assertEquals("CODE-B", productB.code, "Produk B code harus tetap sama")
+    }
+
+    // ==========================================
+    // TEST CASES: deleteProduct
+    // ==========================================
+
+    @Test
+    fun `test deleteProduct removes product correctly`() = runTest {
+        // --- 1. GIVEN ---
+        repository.addProduct("Produk Akan Dihapus", "PRD-DEL")
+        val products = repository.getAllProducts().first()
+        assertEquals(1, products.size)
+        val productId = products[0].id
+
+        // --- 2. WHEN ---
+        repository.deleteProduct(productId)
+
+        // --- 3. THEN ---
+        val remainingProducts = repository.getAllProducts().first()
+        assertTrue(remainingProducts.isEmpty(), "Database harus kosong setelah delete")
+    }
+
+    @Test
+    fun `test deleteProduct only removes specified product`() = runTest {
+        // --- 1. GIVEN ---
+        repository.addProduct("Produk Keep 1", "PRD-1")
+        repository.addProduct("Produk Delete", "PRD-DEL")
+        repository.addProduct("Produk Keep 2", "PRD-2")
+        val products = repository.getAllProducts().first()
+        assertEquals(3, products.size)
+        val deleteId = products.find { it.name == "Produk Delete" }!!.id
+
+        // --- 2. WHEN ---
+        repository.deleteProduct(deleteId)
+
+        // --- 3. THEN ---
+        val remainingProducts = repository.getAllProducts().first()
+        assertEquals(2, remainingProducts.size, "Harus tersisa 2 produk")
+
+        val names = remainingProducts.map { it.name }
+        assertTrue("Produk Keep 1" in names, "Produk Keep 1 harus tetap ada")
+        assertTrue("Produk Keep 2" in names, "Produk Keep 2 harus tetap ada")
+        assertTrue("Produk Delete" !in names, "Produk Delete harus sudah terhapus")
+    }
+
+    @Test
+    fun `test deleteProduct with non-existent id does not affect data`() = runTest {
+        // --- 1. GIVEN ---
+        repository.addProduct("Produk Tetap", "PRD-1")
+        val products = repository.getAllProducts().first()
+        assertEquals(1, products.size)
+
+        // --- 2. WHEN ---
+        repository.deleteProduct(99999L) // ID yang tidak ada
+
+        // --- 3. THEN ---
+        val remainingProducts = repository.getAllProducts().first()
+        assertEquals(1, remainingProducts.size, "Data harus tetap ada")
+    }
 }
