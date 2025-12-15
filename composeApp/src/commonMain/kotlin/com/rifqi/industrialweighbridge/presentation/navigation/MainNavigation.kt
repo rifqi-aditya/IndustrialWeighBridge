@@ -50,6 +50,7 @@ private fun NavigationSideBar() {
             contentColor = MaterialTheme.colorScheme.onSurface
     ) {
         NavigationRailTabItem(WeighingTab)
+        NavigationRailTabItem(HistoryTab)
         NavigationRailTabItem(DashboardTab)
         NavigationRailTabItem(DriversTab)
         NavigationRailTabItem(VehiclesTab)

@@ -5,6 +5,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
@@ -16,6 +17,7 @@ import com.rifqi.industrialweighbridge.presentation.screens.DashboardScreen
 import com.rifqi.industrialweighbridge.presentation.screens.DriverListScreen
 import com.rifqi.industrialweighbridge.presentation.screens.ProductListScreen
 import com.rifqi.industrialweighbridge.presentation.screens.SettingsScreen
+import com.rifqi.industrialweighbridge.presentation.screens.TransactionHistoryScreen
 import com.rifqi.industrialweighbridge.presentation.screens.VehicleListScreen
 import com.rifqi.industrialweighbridge.presentation.screens.WeighingScreen
 
@@ -39,6 +41,25 @@ object WeighingTab : Tab {
 }
 
 // ============================================
+// History Tab
+// ============================================
+object HistoryTab : Tab {
+    private fun readResolve(): Any = HistoryTab
+
+    override val options: TabOptions
+        @Composable
+        get() {
+            val icon = rememberVectorPainter(Icons.Default.Receipt)
+            return remember { TabOptions(index = 1u, title = "Riwayat", icon = icon) }
+        }
+
+    @Composable
+    override fun Content() {
+        TransactionHistoryScreen()
+    }
+}
+
+// ============================================
 // Dashboard Tab
 // ============================================
 object DashboardTab : Tab {
@@ -48,7 +69,7 @@ object DashboardTab : Tab {
         @Composable
         get() {
             val icon = rememberVectorPainter(Icons.Default.Home)
-            return remember { TabOptions(index = 1u, title = "Dashboard", icon = icon) }
+            return remember { TabOptions(index = 2u, title = "Dashboard", icon = icon) }
         }
 
     @Composable
@@ -67,7 +88,7 @@ object DriversTab : Tab {
         @Composable
         get() {
             val icon = rememberVectorPainter(Icons.Default.Person)
-            return remember { TabOptions(index = 2u, title = "Drivers", icon = icon) }
+            return remember { TabOptions(index = 3u, title = "Drivers", icon = icon) }
         }
 
     @Composable
@@ -86,7 +107,7 @@ object VehiclesTab : Tab {
         @Composable
         get() {
             val icon = rememberVectorPainter(Icons.Default.LocalShipping)
-            return remember { TabOptions(index = 3u, title = "Vehicles", icon = icon) }
+            return remember { TabOptions(index = 4u, title = "Vehicles", icon = icon) }
         }
 
     @Composable
@@ -105,7 +126,7 @@ object ProductsTab : Tab {
         @Composable
         get() {
             val icon = rememberVectorPainter(Icons.Default.Inventory2)
-            return remember { TabOptions(index = 4u, title = "Products", icon = icon) }
+            return remember { TabOptions(index = 5u, title = "Products", icon = icon) }
         }
 
     @Composable
@@ -124,7 +145,7 @@ object SettingsTab : Tab {
         @Composable
         get() {
             val icon = rememberVectorPainter(Icons.Default.Settings)
-            return remember { TabOptions(index = 5u, title = "Settings", icon = icon) }
+            return remember { TabOptions(index = 6u, title = "Settings", icon = icon) }
         }
 
     @Composable
