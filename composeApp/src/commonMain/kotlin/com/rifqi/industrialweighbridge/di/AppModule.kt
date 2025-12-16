@@ -24,6 +24,7 @@ import com.rifqi.industrialweighbridge.domain.usecase.vehicle.AddVehicleUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.vehicle.DeleteVehicleUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.vehicle.GetAllVehiclesUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.vehicle.UpdateVehicleUseCase
+import com.rifqi.industrialweighbridge.presentation.viewmodel.DashboardViewModel
 import com.rifqi.industrialweighbridge.presentation.viewmodel.DriverViewModel
 import com.rifqi.industrialweighbridge.presentation.viewmodel.ProductViewModel
 import com.rifqi.industrialweighbridge.presentation.viewmodel.VehicleViewModel
@@ -72,4 +73,5 @@ val appModule = module {
     factory { VehicleViewModel(get(), get(), get(), get()) }
     factory { ProductViewModel(get(), get(), get(), get()) }
     factory { WeighingViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    factory { DashboardViewModel(get(), get(), get(), get(), get()) }
 }

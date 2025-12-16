@@ -48,6 +48,11 @@ object WeightFormatter {
         return integerFormat.format(value)
     }
 
+    /** Formats a Double as integer with thousand separators. Example: 1234.56 -> "1.235" */
+    fun formatInteger(value: Double): String {
+        return integerFormat.format(value)
+    }
+
     /** Parses a formatted string back to Double. Handles both formats: "1.234,56" and "1234.56" */
     fun parseWeight(formattedValue: String): Double? {
         if (formattedValue.isBlank()) return null
