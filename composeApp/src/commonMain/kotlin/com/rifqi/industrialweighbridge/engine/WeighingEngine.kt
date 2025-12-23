@@ -9,7 +9,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.datetime.Clock
 
 /**
  * Core Weighing Engine - The central controller for all weighing operations.
@@ -104,13 +103,20 @@ class WeighingEngine(
 
     // === State Transitions ===
 
-    /** Starts a new weigh-in operation. Transitions from Idle to WeighingIn state. */
+    /** Starts a new weigh-in operation. Transitions to WeighingIn state. */
     fun startWeighIn(request: WeighInRequest): WeighingResult<Unit> {
         val currentState = _state.value
 
-        if (currentState !is WeighingState.Idle && currentState !is WeighingState.Completed) {
+        // Allow from Idle, Completed, Error, or same WeighingIn (retry)
+        val allowedStates =
+                currentState is WeighingState.Idle ||
+                        currentState is WeighingState.Completed ||
+                        currentState is WeighingState.Error ||
+                        currentState is WeighingState.WeighingIn
+
+        if (!allowedStates) {
             return WeighingResult.Failure(
-                    "Cannot start weigh-in from current state",
+                    "Tidak dapat memulai penimbangan. Selesaikan transaksi aktif terlebih dahulu.",
                     ErrorType.BUSINESS_RULE_VIOLATION
             )
         }
@@ -135,15 +141,21 @@ class WeighingEngine(
     }
 
     /**
-     * Starts a weigh-out operation for an existing transaction. Transitions from Idle to
-     * WeighingOut state.
+     * Starts a weigh-out operation for an existing transaction. Transitions to WeighingOut state.
      */
     fun startWeighOut(request: WeighOutRequest): WeighingResult<Unit> {
         val currentState = _state.value
 
-        if (currentState !is WeighingState.Idle && currentState !is WeighingState.Completed) {
+        // Allow from Idle, Completed, Error, or same WeighingOut (retry)
+        val allowedStates =
+                currentState is WeighingState.Idle ||
+                        currentState is WeighingState.Completed ||
+                        currentState is WeighingState.Error ||
+                        currentState is WeighingState.WeighingOut
+
+        if (!allowedStates) {
             return WeighingResult.Failure(
-                    "Cannot start weigh-out from current state",
+                    "Tidak dapat memulai penimbangan. Selesaikan transaksi aktif terlebih dahulu.",
                     ErrorType.BUSINESS_RULE_VIOLATION
             )
         }
@@ -310,9 +322,9 @@ class WeighingEngine(
                             grossWeight = grossWeight,
                             tareWeight = tareWeight,
                             netWeight = netWeight,
-                            transactionType = currentState.transactionType,
-                            completedAt = Clock.System.now()
-                    )
+                            transactionType = currentState.transactionType
+                            // completedAtMillis uses default System.currentTimeMillis()
+                            )
 
             _successMessage.value = "Transaksi selesai! Net: $netWeight kg"
 

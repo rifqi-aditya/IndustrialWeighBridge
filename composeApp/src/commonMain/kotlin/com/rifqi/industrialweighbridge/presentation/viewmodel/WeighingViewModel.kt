@@ -25,10 +25,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * UI State for Weighing Screen.
- *
- * According to HLD Section 3.1: "Presentation Layer hanya berfungsi sebagai command initiator dan
- * state renderer"
+ * UI State for Weighing Screen. Sesuai HLD Section 3.1: Presentation Layer sebagai command
+ * initiator dan state renderer.
  */
 data class WeighingUiState(
         // Weight display (from Engine)
@@ -62,15 +60,10 @@ data class WeighingUiState(
 /**
  * ViewModel for Weighing operations.
  *
- * According to HLD Section 3.1 (Presentation Layer):
+ * Sesuai HLD Section 3.1 (Presentation Layer):
  * - Mengirimkan perintah pengguna (command) ke Core Weighing Engine
  * - Menampilkan status sistem dan hasil proses penimbangan
- * - Menyajikan error dan warning yang dihasilkan oleh Core Weighing Engine
- *
- * DOES NOT:
- * - Perform business logic validation (delegated to Engine)
- * - Determine weight validity (delegated to Engine)
- * - Manage transaction state (delegated to Engine)
+ * - Menyajikan error dan warning dari Core Weighing Engine
  */
 class WeighingViewModel(
         private val weighingEngine: WeighingEngine,
@@ -91,37 +84,29 @@ class WeighingViewModel(
         observeEngine()
     }
 
-    /** Observes state changes from WeighingEngine. Maps engine state to UI state. */
+    // === Engine State Observers ===
+
     private fun observeEngine() {
-        // Observe engine state
         scope.launch {
             weighingEngine.state.collect { state ->
                 _uiState.value = _uiState.value.copy(engineState = state)
             }
         }
-
-        // Observe current weight
         scope.launch {
             weighingEngine.currentWeight.collect { weight ->
                 _uiState.value = _uiState.value.copy(currentWeight = weight)
             }
         }
-
-        // Observe stability
         scope.launch {
             weighingEngine.isStable.collect { stable ->
                 _uiState.value = _uiState.value.copy(isStable = stable)
             }
         }
-
-        // Observe manual mode
         scope.launch {
             weighingEngine.isManualMode.collect { manual ->
                 _uiState.value = _uiState.value.copy(isManualMode = manual)
             }
         }
-
-        // Observe error messages
         scope.launch {
             weighingEngine.errorMessage.collect { error ->
                 if (error != null) {
@@ -129,8 +114,6 @@ class WeighingViewModel(
                 }
             }
         }
-
-        // Observe success messages
         scope.launch {
             weighingEngine.successMessage.collect { success ->
                 if (success != null) {
@@ -139,6 +122,8 @@ class WeighingViewModel(
             }
         }
     }
+
+    // === Data Loading ===
 
     private fun loadMasterData() {
         scope.launch {
@@ -171,22 +156,21 @@ class WeighingViewModel(
         }
     }
 
-    // === User Commands - Delegated to Engine ===
+    // === User Commands ===
 
-    /** Sets weight value (for manual input mode). Command is sent to Engine. */
+    /** Sets weight value (manual input mode). */
     fun setWeight(weight: Double) {
         if (_uiState.value.isManualMode) {
             weighingEngine.setManualWeight(weight)
         }
     }
 
-    /** Toggles manual input mode. Command is sent to Engine. */
+    /** Toggles manual input mode. */
     fun toggleManualMode() {
-        val newMode = !_uiState.value.isManualMode
-        weighingEngine.setManualMode(newMode)
+        weighingEngine.setManualMode(!_uiState.value.isManualMode)
     }
 
-    // === Selection Methods (UI State Only) ===
+    // === UI Selections ===
 
     fun selectVehicle(vehicleId: Long?) {
         _uiState.value = _uiState.value.copy(selectedVehicleId = vehicleId)
@@ -204,27 +188,38 @@ class WeighingViewModel(
         _uiState.value = _uiState.value.copy(selectedTransactionType = type)
     }
 
-    // === Weigh-In Operation ===
+    // === Weighing Operations ===
 
-    /** Starts weigh-in mode. Sends command to Engine to prepare for first weighing. */
-    fun startWeighIn() {
+    /**
+     * Performs Weigh-In (Buka Transaksi / Penimbangan Pertama)
+     * - Validates UI selections
+     * - Starts weigh-in on Engine
+     * - Captures weight and creates transaction
+     */
+    fun performWeighIn() {
         val state = _uiState.value
 
-        // Validate UI selections before sending to engine
+        // Validate UI selections
         if (state.selectedVehicleId == null) {
             _uiState.value = _uiState.value.copy(errorMessage = "Pilih kendaraan terlebih dahulu")
             return
         }
         if (state.selectedDriverId == null) {
-            _uiState.value = _uiState.value.copy(errorMessage = "Pilih driver terlebih dahulu")
+            _uiState.value = _uiState.value.copy(errorMessage = "Pilih supir terlebih dahulu")
             return
         }
         if (state.selectedProductId == null) {
-            _uiState.value = _uiState.value.copy(errorMessage = "Pilih produk terlebih dahulu")
+            _uiState.value =
+                    _uiState.value.copy(errorMessage = "Pilih barang/material terlebih dahulu")
+            return
+        }
+        if (state.currentWeight <= 0) {
+            _uiState.value = _uiState.value.copy(errorMessage = "Masukkan berat terlebih dahulu")
             return
         }
 
-        val result =
+        // Start weigh-in on Engine
+        val startResult =
                 weighingEngine.startWeighIn(
                         WeighInRequest(
                                 vehicleId = state.selectedVehicleId,
@@ -235,13 +230,12 @@ class WeighingViewModel(
                         )
                 )
 
-        if (result is WeighingResult.Failure) {
-            _uiState.value = _uiState.value.copy(errorMessage = result.error)
+        if (startResult is WeighingResult.Failure) {
+            _uiState.value = _uiState.value.copy(errorMessage = startResult.error)
+            return
         }
-    }
 
-    /** Captures weight for weigh-in and creates transaction. Command is sent to Engine. */
-    fun captureWeighIn() {
+        // Capture weight and save transaction
         scope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
 
@@ -250,8 +244,9 @@ class WeighingViewModel(
                     _uiState.value =
                             _uiState.value.copy(
                                     isLoading = false,
+                                    successMessage = "Berat 1 tersimpan! Tiket: ${result.data}",
                                     lastTicketNumber = result.data,
-                                    // Reset selections after successful weigh-in
+                                    currentWeight = 0.0,
                                     selectedVehicleId = null,
                                     selectedDriverId = null,
                                     selectedProductId = null
@@ -265,47 +260,58 @@ class WeighingViewModel(
         }
     }
 
-    // === Weigh-Out Operation ===
+    /**
+     * Performs Weigh-Out (Tutup Transaksi / Penimbangan Kedua)
+     * - Starts weigh-out on Engine with existing transaction
+     * - Captures weight, calculates Gross/Tare/Net
+     * - Closes transaction
+     */
+    fun performWeighOut(ticketNumber: String, entryWeight: Double) {
+        val state = _uiState.value
 
-    /** Starts weigh-out mode for an existing open transaction. Sends command to Engine. */
-    fun startWeighOut(
-            ticketNumber: String,
-            firstWeight: Double,
-            transactionType: TransactionType = TransactionType.INBOUND
-    ) {
-        val openTransaction =
-                _uiState.value.openTransactions.find { it.ticket_number == ticketNumber }
+        if (state.currentWeight <= 0) {
+            _uiState.value = _uiState.value.copy(errorMessage = "Masukkan berat terlebih dahulu")
+            return
+        }
 
-        val result =
+        val openTransaction = state.openTransactions.find { it.ticket_number == ticketNumber }
+
+        // Start weigh-out on Engine
+        val startResult =
                 weighingEngine.startWeighOut(
                         WeighOutRequest(
                                 ticketNumber = ticketNumber,
-                                firstWeight = firstWeight,
-                                transactionType = transactionType,
+                                firstWeight = entryWeight,
+                                transactionType =
+                                        TransactionType.INBOUND, // TODO: Get from transaction data
                                 vehicleId = openTransaction?.vehicle_id ?: 0,
                                 driverId = openTransaction?.driver_id ?: 0,
                                 productId = openTransaction?.product_id ?: 0,
-                                isManualMode = _uiState.value.isManualMode
+                                isManualMode = state.isManualMode
                         )
                 )
 
-        if (result is WeighingResult.Failure) {
-            _uiState.value = _uiState.value.copy(errorMessage = result.error)
+        if (startResult is WeighingResult.Failure) {
+            _uiState.value = _uiState.value.copy(errorMessage = startResult.error)
+            return
         }
-    }
 
-    /** Captures weight for weigh-out and completes transaction. Command is sent to Engine. */
-    fun captureWeighOut() {
+        // Capture weight and complete transaction
         scope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
 
             when (val result = weighingEngine.captureWeighOut()) {
                 is WeighingResult.Success -> {
+                    val txn = result.data
                     _uiState.value =
                             _uiState.value.copy(
                                     isLoading = false,
                                     successMessage =
-                                            "Transaksi selesai! Net: ${result.data.netWeight} kg"
+                                            "Transaksi selesai!\n" +
+                                                    "Gross: ${txn.grossWeight} kg\n" +
+                                                    "Tare: ${txn.tareWeight} kg\n" +
+                                                    "Netto: ${txn.netWeight} kg",
+                                    currentWeight = 0.0
                             )
                 }
                 is WeighingResult.Failure -> {
@@ -316,29 +322,8 @@ class WeighingViewModel(
         }
     }
 
-    // === Legacy Methods for Backward Compatibility ===
+    // === Utility Functions ===
 
-    /** Performs weigh-in directly (legacy method). For backward compatibility with existing UI. */
-    fun performWeighIn() {
-        startWeighIn()
-        // If already in WeighingIn state, capture
-        if (_uiState.value.engineState is WeighingState.WeighingIn) {
-            captureWeighIn()
-        }
-    }
-
-    /** Performs weigh-out directly (legacy method). For backward compatibility with existing UI. */
-    fun performWeighOut(ticketNumber: String, entryWeight: Double) {
-        startWeighOut(ticketNumber, entryWeight)
-        // If already in WeighingOut state, capture
-        if (_uiState.value.engineState is WeighingState.WeighingOut) {
-            captureWeighOut()
-        }
-    }
-
-    // === Cancel & Clear Operations ===
-
-    /** Cancels current weighing operation. */
     fun cancelOperation() {
         weighingEngine.cancelOperation()
     }

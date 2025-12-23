@@ -19,10 +19,8 @@ import com.rifqi.industrialweighbridge.domain.usecase.product.AddProductUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.product.DeleteProductUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.product.GetAllProductsUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.product.UpdateProductUseCase
-import com.rifqi.industrialweighbridge.domain.usecase.transaction.CreateWeighInUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.transaction.GetAllTransactionsUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.transaction.GetOpenTransactionsUseCase
-import com.rifqi.industrialweighbridge.domain.usecase.transaction.UpdateWeighOutUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.vehicle.AddVehicleUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.vehicle.DeleteVehicleUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.vehicle.GetAllVehiclesUseCase
@@ -91,8 +89,7 @@ val appModule = module {
     // --- Transaction Use Cases ---
     factory { GetAllTransactionsUseCase(get()) }
     factory { GetOpenTransactionsUseCase(get()) }
-    factory { CreateWeighInUseCase(get()) }
-    factory { UpdateWeighOutUseCase(get()) }
+    // Note: CreateWeighInUseCase and UpdateWeighOutUseCase are replaced by WeighingEngine
 
     // --- ViewModels ---
     factory { DriverViewModel(get(), get(), get(), get()) }
