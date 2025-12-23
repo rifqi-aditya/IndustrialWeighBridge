@@ -30,11 +30,11 @@ fun MainNavigationScreen() {
 
             // Main Content Area
             Box(
-                modifier =
-                    Modifier.fillMaxHeight()
-                        .weight(1f)
-                        .background(MaterialTheme.colorScheme.background)
-                        .padding(16.dp)
+                    modifier =
+                            Modifier.fillMaxHeight()
+                                    .weight(1f)
+                                    .background(MaterialTheme.colorScheme.background)
+                                    .padding(16.dp)
             ) { CurrentTab() }
         }
     }
@@ -45,16 +45,14 @@ private fun NavigationSideBar() {
     val tabNavigator = LocalTabNavigator.current
 
     NavigationRail(
-        modifier = Modifier.fillMaxHeight().width(100.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
-        contentColor = MaterialTheme.colorScheme.onSurface
+            modifier = Modifier.fillMaxHeight().width(100.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface
     ) {
         NavigationRailTabItem(WeighingTab)
         NavigationRailTabItem(HistoryTab)
         NavigationRailTabItem(DashboardTab)
-        NavigationRailTabItem(DriversTab)
-        NavigationRailTabItem(VehiclesTab)
-        NavigationRailTabItem(ProductsTab)
+        NavigationRailTabItem(MasterDataTab)
         NavigationRailTabItem(SettingsTab)
     }
 }
@@ -65,22 +63,22 @@ private fun NavigationRailTabItem(tab: Tab) {
     val isSelected = tabNavigator.current == tab
 
     NavigationRailItem(
-        selected = isSelected,
-        onClick = { tabNavigator.current = tab },
-        icon = {
-            tab.options.icon?.let { painter ->
-                Icon(painter = painter, contentDescription = tab.options.title)
-            }
-        },
-        label = { Text(text = tab.options.title, style = MaterialTheme.typography.labelSmall) },
-        colors =
-            NavigationRailItemDefaults.colors(
-                selectedIconColor = MaterialTheme.colorScheme.primary,
-                selectedTextColor = MaterialTheme.colorScheme.primary,
-                indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-            ),
-        alwaysShowLabel = true
+            selected = isSelected,
+            onClick = { tabNavigator.current = tab },
+            icon = {
+                tab.options.icon?.let { painter ->
+                    Icon(painter = painter, contentDescription = tab.options.title)
+                }
+            },
+            label = { Text(text = tab.options.title, style = MaterialTheme.typography.labelSmall) },
+            colors =
+                    NavigationRailItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
+            alwaysShowLabel = true
     )
 }

@@ -38,6 +38,11 @@ import org.koin.compose.koinInject
 
 @Composable
 fun VehicleListScreen() {
+    VehicleListContent()
+}
+
+@Composable
+fun VehicleListContent() {
     val viewModel: VehicleViewModel = koinInject()
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -67,14 +72,6 @@ fun VehicleListScreen() {
             containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            // Header
-            Text(
-                    text = "Manajemen Kendaraan",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(bottom = 16.dp)
-            )
-
             // Search Bar
             SearchBar(
                     query = uiState.searchQuery,

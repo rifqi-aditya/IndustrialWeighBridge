@@ -6,12 +6,12 @@ import androidx.compose.ui.graphics.Color
 // Industrial Color Palette
 // ============================================
 
-// Primary - Industrial Orange
-val Orange500 = Color(0xFFFF6B00)
-val Orange600 = Color(0xFFE65C00)
-val Orange700 = Color(0xFFCC5200)
-val Orange400 = Color(0xFFFF8C00)
-val Orange300 = Color(0xFFFFAB40)
+// Primary - Industrial Teal (lebih lembut untuk mata)
+val Teal500 = Color(0xFF00897B)
+val Teal600 = Color(0xFF00796B)
+val Teal700 = Color(0xFF00695C)
+val Teal400 = Color(0xFF26A69A)
+val Teal300 = Color(0xFF4DB6AC)
 
 // Secondary - Industrial Blue
 val Blue500 = Color(0xFF0066CC)
@@ -44,10 +44,10 @@ val Info = Color(0xFF2196F3)
 // ============================================
 // Light Theme Colors
 // ============================================
-val LightPrimary = Orange500
+val LightPrimary = Teal500
 val LightOnPrimary = Color.White
-val LightPrimaryContainer = Orange300
-val LightOnPrimaryContainer = Orange700
+val LightPrimaryContainer = Teal300
+val LightOnPrimaryContainer = Teal700
 
 val LightSecondary = Blue500
 val LightOnSecondary = Color.White
@@ -67,10 +67,10 @@ val LightOnError = Color.White
 // ============================================
 // Dark Theme Colors
 // ============================================
-val DarkPrimary = Orange400
+val DarkPrimary = Teal400
 val DarkOnPrimary = Gray900
-val DarkPrimaryContainer = Orange700
-val DarkOnPrimaryContainer = Orange300
+val DarkPrimaryContainer = Teal700
+val DarkOnPrimaryContainer = Teal300
 
 val DarkSecondary = Blue400
 val DarkOnSecondary = Gray900

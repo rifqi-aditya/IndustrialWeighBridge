@@ -2,23 +2,19 @@ package com.rifqi.industrialweighbridge.presentation.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Inventory2
-import androidx.compose.material.icons.filled.LocalShipping
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import com.rifqi.industrialweighbridge.presentation.screens.DashboardScreen
-import com.rifqi.industrialweighbridge.presentation.screens.DriverListScreen
-import com.rifqi.industrialweighbridge.presentation.screens.ProductListScreen
+import com.rifqi.industrialweighbridge.presentation.screens.MasterDataScreen
 import com.rifqi.industrialweighbridge.presentation.screens.SettingsScreen
 import com.rifqi.industrialweighbridge.presentation.screens.TransactionHistoryScreen
-import com.rifqi.industrialweighbridge.presentation.screens.VehicleListScreen
 import com.rifqi.industrialweighbridge.presentation.screens.WeighingScreen
 
 // ============================================
@@ -79,59 +75,21 @@ object DashboardTab : Tab {
 }
 
 // ============================================
-// Drivers Tab
+// Master Data Tab (Combined: Driver, Kendaraan, Produk)
 // ============================================
-object DriversTab : Tab {
-    private fun readResolve(): Any = DriversTab
+object MasterDataTab : Tab {
+    private fun readResolve(): Any = MasterDataTab
 
     override val options: TabOptions
         @Composable
         get() {
-            val icon = rememberVectorPainter(Icons.Default.Person)
-            return remember { TabOptions(index = 3u, title = "Drivers", icon = icon) }
+            val icon = rememberVectorPainter(Icons.Default.Storage)
+            return remember { TabOptions(index = 3u, title = "Master Data", icon = icon) }
         }
 
     @Composable
     override fun Content() {
-        DriverListScreen()
-    }
-}
-
-// ============================================
-// Vehicles Tab
-// ============================================
-object VehiclesTab : Tab {
-    private fun readResolve(): Any = VehiclesTab
-
-    override val options: TabOptions
-        @Composable
-        get() {
-            val icon = rememberVectorPainter(Icons.Default.LocalShipping)
-            return remember { TabOptions(index = 4u, title = "Vehicles", icon = icon) }
-        }
-
-    @Composable
-    override fun Content() {
-        VehicleListScreen()
-    }
-}
-
-// ============================================
-// Products Tab
-// ============================================
-object ProductsTab : Tab {
-    private fun readResolve(): Any = ProductsTab
-
-    override val options: TabOptions
-        @Composable
-        get() {
-            val icon = rememberVectorPainter(Icons.Default.Inventory2)
-            return remember { TabOptions(index = 5u, title = "Products", icon = icon) }
-        }
-
-    @Composable
-    override fun Content() {
-        ProductListScreen()
+        MasterDataScreen()
     }
 }
 
@@ -145,7 +103,7 @@ object SettingsTab : Tab {
         @Composable
         get() {
             val icon = rememberVectorPainter(Icons.Default.Settings)
-            return remember { TabOptions(index = 6u, title = "Settings", icon = icon) }
+            return remember { TabOptions(index = 4u, title = "Pengaturan", icon = icon) }
         }
 
     @Composable

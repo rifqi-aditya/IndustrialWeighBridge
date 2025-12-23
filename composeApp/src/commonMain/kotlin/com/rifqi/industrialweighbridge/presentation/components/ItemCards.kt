@@ -80,14 +80,14 @@ fun DriverCard(
                 IconButton(onClick = onEdit) {
                     Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit",
+                            contentDescription = "Ubah",
                             tint = MaterialTheme.colorScheme.primary
                     )
                 }
                 IconButton(onClick = onDelete) {
                     Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete",
+                            contentDescription = "Hapus",
                             tint = MaterialTheme.colorScheme.error
                     )
                 }
@@ -161,14 +161,14 @@ fun VehicleCard(
                 IconButton(onClick = onEdit) {
                     Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit",
+                            contentDescription = "Ubah",
                             tint = MaterialTheme.colorScheme.primary
                     )
                 }
                 IconButton(onClick = onDelete) {
                     Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete",
+                            contentDescription = "Hapus",
                             tint = MaterialTheme.colorScheme.error
                     )
                 }
@@ -229,14 +229,14 @@ fun ProductCard(
                 IconButton(onClick = onEdit) {
                     Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit",
+                            contentDescription = "Ubah",
                             tint = MaterialTheme.colorScheme.primary
                     )
                 }
                 IconButton(onClick = onDelete) {
                     Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete",
+                            contentDescription = "Hapus",
                             tint = MaterialTheme.colorScheme.error
                     )
                 }

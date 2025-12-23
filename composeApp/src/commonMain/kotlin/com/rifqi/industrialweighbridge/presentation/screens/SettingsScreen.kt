@@ -388,7 +388,7 @@ fun SettingsScreen() {
 
                 // App Info
                 Text(
-                        text = "Industrial WeighBridge System v1.0.0",
+                        text = "Sistem Jembatan Timbang v1.0.0",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.align(Alignment.CenterHorizontally)

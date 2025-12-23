@@ -37,6 +37,11 @@ import org.koin.compose.koinInject
 
 @Composable
 fun DriverListScreen() {
+    DriverListContent()
+}
+
+@Composable
+fun DriverListContent() {
     val viewModel: DriverViewModel = koinInject()
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -53,32 +58,25 @@ fun DriverListScreen() {
     }
 
     Scaffold(
-            snackbarHost = { SnackbarHost(snackbarHostState) },
-            floatingActionButton = {
-                ExtendedFloatingActionButton(
-                        onClick = { showAddDialog = true },
-                        icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                        text = { Text("Tambah Driver") },
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            },
-            containerColor = MaterialTheme.colorScheme.background
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { showAddDialog = true },
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                text = { Text("Tambah Driver") },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            // Header
-            Text(
-                    text = "Manajemen Driver",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(bottom = 16.dp)
-            )
 
-            // Search Bar
             SearchBar(
-                    query = uiState.searchQuery,
-                    onQueryChange = viewModel::onSearchQueryChange,
-                    placeholder = "Cari nama atau SIM..."
+                query = uiState.searchQuery,
+                onQueryChange = viewModel::onSearchQueryChange,
+                placeholder = "Cari nama atau SIM...",
+                modifier = Modifier.padding(paddingValues)
             )
 
             // Content
@@ -92,24 +90,24 @@ fun DriverListScreen() {
                 if (filteredDrivers.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
-                                text =
-                                        if (uiState.searchQuery.isEmpty()) "Belum ada data driver"
-                                        else "Tidak ditemukan",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            text =
+                                if (uiState.searchQuery.isEmpty()) "Belum ada data driver"
+                                else "Tidak ditemukan",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 } else {
                     LazyColumn(
-                            contentPadding = PaddingValues(vertical = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        contentPadding = PaddingValues(vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(filteredDrivers, key = { it.id }) { driver ->
                             DriverCard(
-                                    name = driver.name,
-                                    licenseNo = driver.license_no,
-                                    onEdit = { editingDriver = driver },
-                                    onDelete = { viewModel.delete(driver.id) }
+                                name = driver.name,
+                                licenseNo = driver.license_no,
+                                onEdit = { editingDriver = driver },
+                                onDelete = { viewModel.delete(driver.id) }
                             )
                         }
                     }
@@ -121,26 +119,26 @@ fun DriverListScreen() {
     // Add Dialog
     if (showAddDialog) {
         DriverFormDialog(
-                isEdit = false,
-                onDismiss = { showAddDialog = false },
-                onConfirm = { name, licenseNo ->
-                    viewModel.add(name, licenseNo)
-                    showAddDialog = false
-                }
+            isEdit = false,
+            onDismiss = { showAddDialog = false },
+            onConfirm = { name, licenseNo ->
+                viewModel.add(name, licenseNo)
+                showAddDialog = false
+            }
         )
     }
 
     // Edit Dialog
     editingDriver?.let { driver ->
         DriverFormDialog(
-                isEdit = true,
-                initialName = driver.name,
-                initialLicenseNo = driver.license_no ?: "",
-                onDismiss = { editingDriver = null },
-                onConfirm = { name, licenseNo ->
-                    viewModel.update(driver.id, name, licenseNo)
-                    editingDriver = null
-                }
+            isEdit = true,
+            initialName = driver.name,
+            initialLicenseNo = driver.license_no ?: "",
+            onDismiss = { editingDriver = null },
+            onConfirm = { name, licenseNo ->
+                viewModel.update(driver.id, name, licenseNo)
+                editingDriver = null
+            }
         )
     }
 }

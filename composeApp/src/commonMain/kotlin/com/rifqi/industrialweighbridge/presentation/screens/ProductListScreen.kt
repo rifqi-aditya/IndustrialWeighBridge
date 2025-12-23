@@ -37,6 +37,11 @@ import org.koin.compose.koinInject
 
 @Composable
 fun ProductListScreen() {
+    ProductListContent()
+}
+
+@Composable
+fun ProductListContent() {
     val viewModel: ProductViewModel = koinInject()
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -66,14 +71,6 @@ fun ProductListScreen() {
             containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            // Header
-            Text(
-                    text = "Manajemen Produk",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(bottom = 16.dp)
-            )
-
             // Search Bar
             SearchBar(
                     query = uiState.searchQuery,

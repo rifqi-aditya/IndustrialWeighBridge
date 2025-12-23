@@ -33,7 +33,7 @@ fun SearchBar(
             leadingIcon = {
                 Icon(
                         imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
+                        contentDescription = "Cari",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
@@ -42,7 +42,7 @@ fun SearchBar(
                     IconButton(onClick = { onQueryChange("") }) {
                         Icon(
                                 imageVector = Icons.Default.Clear,
-                                contentDescription = "Clear",
+                                contentDescription = "Hapus",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
