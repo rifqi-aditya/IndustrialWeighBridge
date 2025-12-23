@@ -98,6 +98,16 @@ val appModule = module {
     factory { DriverViewModel(get(), get(), get(), get()) }
     factory { VehicleViewModel(get(), get(), get(), get()) }
     factory { ProductViewModel(get(), get(), get(), get()) }
-    factory { WeighingViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    // WeighingViewModel now uses WeighingEngine as single source of truth
+    factory {
+        WeighingViewModel(
+                weighingEngine = get(),
+                getAllVehiclesUseCase = get(),
+                getAllDriversUseCase = get(),
+                getAllProductsUseCase = get(),
+                getAllTransactionsUseCase = get(),
+                getOpenTransactionsUseCase = get()
+        )
+    }
     factory { DashboardViewModel(get(), get(), get(), get(), get()) }
 }
