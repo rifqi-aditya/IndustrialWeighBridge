@@ -10,6 +10,7 @@ import androidx.compose.ui.window.rememberWindowState
 import com.rifqi.industrialweighbridge.db.WeighbridgeDatabase
 import com.rifqi.industrialweighbridge.di.appModule
 import com.rifqi.industrialweighbridge.di.databaseModule
+import com.rifqi.industrialweighbridge.di.jvmModule
 import com.rifqi.industrialweighbridge.presentation.components.WindowTitleBar
 import com.rifqi.industrialweighbridge.presentation.navigation.MainNavigationScreen
 import com.rifqi.industrialweighbridge.presentation.theme.WeighBridgeTheme
@@ -61,8 +62,9 @@ fun main() = application {
 fun initKoin() {
     startKoin {
         modules(
-                appModule, // Repository, Use Cases & ViewModels
-                databaseModule // SqlDriver & Database Setup
+                appModule, // Repository, Use Cases, ViewModels & Engine
+                databaseModule, // SqlDriver & Database Setup
+                jvmModule // JVM-specific: Serial Port, Printer
         )
     }
 }

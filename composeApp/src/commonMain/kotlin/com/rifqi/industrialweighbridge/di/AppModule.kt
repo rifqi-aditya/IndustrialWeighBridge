@@ -1,5 +1,7 @@
 package com.rifqi.industrialweighbridge.di
 
+// Engine Layer
+// Infrastructure Layer
 import com.rifqi.industrialweighbridge.data.repository.SettingsRepository
 import com.rifqi.industrialweighbridge.data.repository.SqlDelightDriverRepository
 import com.rifqi.industrialweighbridge.data.repository.SqlDelightProductRepository
@@ -25,6 +27,10 @@ import com.rifqi.industrialweighbridge.domain.usecase.vehicle.AddVehicleUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.vehicle.DeleteVehicleUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.vehicle.GetAllVehiclesUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.vehicle.UpdateVehicleUseCase
+import com.rifqi.industrialweighbridge.engine.StabilityConfig
+import com.rifqi.industrialweighbridge.engine.WeighingEngine
+import com.rifqi.industrialweighbridge.infrastructure.AuditLogger
+import com.rifqi.industrialweighbridge.infrastructure.InMemoryAuditLogger
 import com.rifqi.industrialweighbridge.presentation.viewmodel.DashboardViewModel
 import com.rifqi.industrialweighbridge.presentation.viewmodel.DriverViewModel
 import com.rifqi.industrialweighbridge.presentation.viewmodel.ProductViewModel
@@ -47,6 +53,22 @@ val appModule = module {
 
     // --- Transaction Repository ---
     single<TransactionRepository> { SqlDelightTransactionRepository(db = get()) }
+
+    // === NEW: Core Weighing Engine (HLD Section 3.2) ===
+
+    // Stability configuration
+    single { StabilityConfig(windowSize = 5, toleranceKg = 2.0, minimumWeightKg = 50.0) }
+
+    // Core Weighing Engine - Single source of truth for weighing operations
+    single { WeighingEngine(transactionRepository = get(), stabilityConfig = get()) }
+
+    // === NEW: Infrastructure Layer (HLD Section 3.3) ===
+
+    // Audit Logger
+    single<AuditLogger> { InMemoryAuditLogger() }
+
+    // Note: SerialCommunicationHandler and PrinterService are JVM-specific
+    // They are registered in jvmModule.kt
 
     // --- Driver Use Cases ---
     factory { GetAllDriversUseCase(get()) }
