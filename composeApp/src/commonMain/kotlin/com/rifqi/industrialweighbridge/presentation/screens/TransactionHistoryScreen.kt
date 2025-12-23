@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -35,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.rifqi.industrialweighbridge.data.repository.SettingsRepository
 import com.rifqi.industrialweighbridge.db.SelectAllTransactions
 import com.rifqi.industrialweighbridge.domain.utils.DateTimeUtils
 import com.rifqi.industrialweighbridge.presentation.components.SearchBar
@@ -51,6 +53,7 @@ enum class TransactionFilter {
 @Composable
 fun TransactionHistoryScreen() {
     val viewModel: WeighingViewModel = koinInject()
+    val settingsRepository: SettingsRepository = koinInject()
     val uiState by viewModel.uiState.collectAsState()
 
     var searchQuery by remember { mutableStateOf("") }
@@ -151,7 +154,15 @@ fun TransactionHistoryScreen() {
                 }
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(filteredTransactions) { txn -> TransactionCard(transaction = txn) }
+                    items(filteredTransactions) { txn ->
+                        TransactionCard(
+                                transaction = txn,
+                                onPrint = { transaction ->
+                                    com.rifqi.industrialweighbridge.presentation.print
+                                            .printTransaction(transaction, settingsRepository)
+                                }
+                        )
+                    }
                 }
             }
         }
@@ -159,7 +170,10 @@ fun TransactionHistoryScreen() {
 }
 
 @Composable
-fun TransactionCard(transaction: SelectAllTransactions) {
+fun TransactionCard(
+        transaction: SelectAllTransactions,
+        onPrint: ((SelectAllTransactions) -> Unit)? = null
+) {
     val isOpen = transaction.status.name == "OPEN"
 
     Card(
@@ -327,6 +341,22 @@ fun TransactionCard(transaction: SelectAllTransactions) {
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+            }
+
+            // Print button (only for closed transactions)
+            if (!isOpen && onPrint != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                androidx.compose.material3.OutlinedButton(
+                        onClick = { onPrint(transaction) },
+                        modifier = Modifier.fillMaxWidth()
+                ) {
+                    androidx.compose.material3.Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Default.Print,
+                            contentDescription = "Print"
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Cetak Tiket")
                 }
             }
 

@@ -42,6 +42,9 @@ kotlin {
             
             // Date/Time handling
             implementation(libs.kotlinx.datetime)
+            
+            // 4. Settings/Preferences (for storing app settings)
+            implementation("com.russhwolf:multiplatform-settings-no-arg:1.1.1")
         }
 
         commonTest.dependencies {
@@ -70,6 +73,10 @@ kotlin {
 
             // 4. Hardware Communication (Serial Port / RS232)
             implementation(libs.jserialcomm)
+            
+            // 5. PDF Generation (Print Ticket) - HTML to PDF
+            implementation("org.apache.pdfbox:pdfbox:2.0.29")
+            implementation("com.openhtmltopdf:openhtmltopdf-pdfbox:1.0.10")
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.rifqi.industrialweighbridge.di
 
+import com.rifqi.industrialweighbridge.data.repository.SettingsRepository
 import com.rifqi.industrialweighbridge.data.repository.SqlDelightDriverRepository
 import com.rifqi.industrialweighbridge.data.repository.SqlDelightProductRepository
 import com.rifqi.industrialweighbridge.data.repository.SqlDelightTransactionRepository
@@ -32,6 +33,9 @@ import com.rifqi.industrialweighbridge.presentation.viewmodel.WeighingViewModel
 import org.koin.dsl.module
 
 val appModule = module {
+
+    // --- Settings Repository (for app preferences) ---
+    single { SettingsRepository() }
 
     // --- Master Data Repositories (SRP) ---
 
