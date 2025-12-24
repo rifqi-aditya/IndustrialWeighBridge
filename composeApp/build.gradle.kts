@@ -77,6 +77,9 @@ kotlin {
             // 5. PDF Generation (Print Ticket) - HTML to PDF
             implementation("org.apache.pdfbox:pdfbox:2.0.29")
             implementation("com.openhtmltopdf:openhtmltopdf-pdfbox:1.0.10")
+            
+            // 6. BCrypt for password hashing
+            implementation("org.mindrot:jbcrypt:0.4")
         }
     }
 }

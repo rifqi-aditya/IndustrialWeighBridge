@@ -92,6 +92,9 @@ SELECT * FROM User WHERE username = ?;
 insertUser:
 INSERT INTO User (username, password_hash, role) VALUES (?, ?, ?);
 
+selectUserById:
+SELECT * FROM User WHERE id = ?;
+
 -- B. MASTER DATA Queries
 -- Vehicle
 selectAllVehicles:

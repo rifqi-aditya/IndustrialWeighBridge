@@ -1,5 +1,7 @@
 package com.rifqi.industrialweighbridge.di
 
+import com.rifqi.industrialweighbridge.data.repository.SqlDelightAuthRepository
+import com.rifqi.industrialweighbridge.domain.repository.AuthRepository
 import com.rifqi.industrialweighbridge.infrastructure.JvmPrinterService
 import com.rifqi.industrialweighbridge.infrastructure.JvmSerialCommunicationHandler
 import com.rifqi.industrialweighbridge.infrastructure.PrinterService
@@ -10,7 +12,7 @@ import org.koin.dsl.module
  * JVM-specific Koin module.
  *
  * Contains platform-specific implementations that require JVM APIs (Serial communication, Printing,
- * etc.)
+ * BCrypt, etc.)
  */
 val jvmModule = module {
 
@@ -32,4 +34,8 @@ val jvmModule = module {
                 }
         )
     }
+
+    // === Authentication - JVM Implementation (requires BCrypt) ===
+
+    single<AuthRepository> { SqlDelightAuthRepository(db = get()) }
 }

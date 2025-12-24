@@ -12,73 +12,73 @@ package com.rifqi.industrialweighbridge.engine
  */
 sealed class WeighingState {
 
-        /** System is idle, waiting for user action. No active weighing operation in progress. */
-        data object Idle : WeighingState()
+    /** System is idle, waiting for user action. No active weighing operation in progress. */
+    data object Idle : WeighingState()
 
-        /**
-         * System is in weigh-in mode (first weighing). Waiting for weight to stabilize and be
-         * captured.
-         */
-        data class WeighingIn(
-                val selectedVehicleId: Long,
-                val selectedDriverId: Long,
-                val selectedProductId: Long,
-                val selectedPartnerId: Long?,
-                val transactionType: TransactionType,
-                val poDoNumber: String? = null,
-                val currentWeight: Double = 0.0,
-                val isStable: Boolean = false,
-                val isManualMode: Boolean = false
-        ) : WeighingState()
+    /**
+     * System is in weigh-in mode (first weighing). Waiting for weight to stabilize and be
+     * captured.
+     */
+    data class WeighingIn(
+        val selectedVehicleId: Long,
+        val selectedDriverId: Long,
+        val selectedProductId: Long,
+        val selectedPartnerId: Long?,
+        val transactionType: TransactionType,
+        val poDoNumber: String? = null,
+        val currentWeight: Double = 0.0,
+        val isStable: Boolean = false,
+        val isManualMode: Boolean = false
+    ) : WeighingState()
 
-        /**
-         * System is in weigh-out mode (second weighing). Linked to an existing open transaction.
-         */
-        data class WeighingOut(
-                val ticketNumber: String,
-                val firstWeight: Double,
-                val transactionType: TransactionType,
-                val currentWeight: Double = 0.0,
-                val isStable: Boolean = false,
-                val isManualMode: Boolean = false,
-                val vehicleId: Long,
-                val driverId: Long,
-                val productId: Long,
-                val partnerId: Long?
-        ) : WeighingState()
+    /**
+     * System is in weigh-out mode (second weighing). Linked to an existing open transaction.
+     */
+    data class WeighingOut(
+        val ticketNumber: String,
+        val firstWeight: Double,
+        val transactionType: TransactionType,
+        val currentWeight: Double = 0.0,
+        val isStable: Boolean = false,
+        val isManualMode: Boolean = false,
+        val vehicleId: Long,
+        val driverId: Long,
+        val productId: Long,
+        val partnerId: Long?
+    ) : WeighingState()
 
-        /** Transaction completed successfully. Contains all final data for display/printing. */
-        data class Completed(
-                val ticketNumber: String,
-                val grossWeight: Double,
-                val tareWeight: Double,
-                val netWeight: Double,
-                val transactionType: TransactionType,
-                val completedAtMillis: Long = System.currentTimeMillis()
-        ) : WeighingState()
+    /** Transaction completed successfully. Contains all final data for display/printing. */
+    data class Completed(
+        val ticketNumber: String,
+        val grossWeight: Double,
+        val tareWeight: Double,
+        val netWeight: Double,
+        val transactionType: TransactionType,
+        val completedAtMillis: Long = System.currentTimeMillis()
+    ) : WeighingState()
 
-        /** An error occurred during weighing process. */
-        data class Error(
-                val message: String,
-                val errorType: ErrorType,
-                val previousState: WeighingState? = null
-        ) : WeighingState()
+    /** An error occurred during weighing process. */
+    data class Error(
+        val message: String,
+        val errorType: ErrorType,
+        val previousState: WeighingState? = null
+    ) : WeighingState()
 }
 
 /** Types of errors that can occur during weighing. */
 enum class ErrorType {
-        /** Device connection lost or unavailable */
-        DEVICE_DISCONNECTED,
+    /** Device connection lost or unavailable */
+    DEVICE_DISCONNECTED,
 
-        /** Weight reading is unstable */
-        UNSTABLE_WEIGHT,
+    /** Weight reading is unstable */
+    UNSTABLE_WEIGHT,
 
-        /** Invalid or corrupted weight data */
-        INVALID_DATA,
+    /** Invalid or corrupted weight data */
+    INVALID_DATA,
 
-        /** Business rule violation */
-        BUSINESS_RULE_VIOLATION,
+    /** Business rule violation */
+    BUSINESS_RULE_VIOLATION,
 
-        /** Generic/unknown error */
-        UNKNOWN
+    /** Generic/unknown error */
+    UNKNOWN
 }

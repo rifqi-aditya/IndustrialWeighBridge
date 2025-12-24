@@ -32,12 +32,14 @@ import com.rifqi.industrialweighbridge.domain.usecase.vehicle.AddVehicleUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.vehicle.DeleteVehicleUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.vehicle.GetAllVehiclesUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.vehicle.UpdateVehicleUseCase
+import com.rifqi.industrialweighbridge.engine.AuthenticationManager
 import com.rifqi.industrialweighbridge.engine.StabilityConfig
 import com.rifqi.industrialweighbridge.engine.WeighingEngine
 import com.rifqi.industrialweighbridge.infrastructure.AuditLogger
 import com.rifqi.industrialweighbridge.infrastructure.InMemoryAuditLogger
 import com.rifqi.industrialweighbridge.presentation.viewmodel.DashboardViewModel
 import com.rifqi.industrialweighbridge.presentation.viewmodel.DriverViewModel
+import com.rifqi.industrialweighbridge.presentation.viewmodel.LoginViewModel
 import com.rifqi.industrialweighbridge.presentation.viewmodel.PartnerViewModel
 import com.rifqi.industrialweighbridge.presentation.viewmodel.ProductViewModel
 import com.rifqi.industrialweighbridge.presentation.viewmodel.VehicleViewModel
@@ -74,6 +76,15 @@ val appModule = module {
 
     // Audit Logger
     single<AuditLogger> { InMemoryAuditLogger() }
+
+    // === Authentication ===
+    // Note: AuthRepository is registered in jvmModule.kt (requires BCrypt)
+
+    // Authentication Manager - Session and login state management
+    single { AuthenticationManager(authRepository = get()) }
+
+    // Login ViewModel
+    factory { LoginViewModel(authenticationManager = get()) }
 
     // Note: SerialCommunicationHandler and PrinterService are JVM-specific
     // They are registered in jvmModule.kt
@@ -116,13 +127,13 @@ val appModule = module {
     // WeighingViewModel now uses WeighingEngine as single source of truth
     factory {
         WeighingViewModel(
-                weighingEngine = get(),
-                getAllVehiclesUseCase = get(),
-                getAllDriversUseCase = get(),
-                getAllProductsUseCase = get(),
-                getPartnersByTypeUseCase = get(),
-                getAllTransactionsUseCase = get(),
-                getOpenTransactionsUseCase = get()
+            weighingEngine = get(),
+            getAllVehiclesUseCase = get(),
+            getAllDriversUseCase = get(),
+            getAllProductsUseCase = get(),
+            getPartnersByTypeUseCase = get(),
+            getAllTransactionsUseCase = get(),
+            getOpenTransactionsUseCase = get()
         )
     }
     factory { DashboardViewModel(get(), get(), get(), get(), get()) }

@@ -66,12 +66,12 @@ class StabilityDetector(private val config: StabilityConfig = StabilityConfig())
 
 /** Configuration for stability detection. */
 data class StabilityConfig(
-        /** Number of readings to consider for stability check */
-        val windowSize: Int = 5,
+    /** Number of readings to consider for stability check */
+    val windowSize: Int = 5,
 
-        /** Maximum allowed deviation from average in kg */
-        val toleranceKg: Double = 2.0,
+    /** Maximum allowed deviation from average in kg */
+    val toleranceKg: Double = 2.0,
 
-        /** Minimum weight threshold in kg (to avoid noise at zero) */
-        val minimumWeightKg: Double = 50.0
+    /** Minimum weight threshold in kg (to avoid noise at zero) */
+    val minimumWeightKg: Double = 50.0
 )

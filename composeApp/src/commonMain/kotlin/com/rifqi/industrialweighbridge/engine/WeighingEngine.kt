@@ -32,8 +32,8 @@ import kotlinx.coroutines.flow.asStateFlow
  * - Engine is independent of UI or specific device implementations
  */
 class WeighingEngine(
-        private val transactionRepository: TransactionRepository,
-        private val stabilityConfig: StabilityConfig = StabilityConfig()
+    private val transactionRepository: TransactionRepository,
+    private val stabilityConfig: StabilityConfig = StabilityConfig()
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -109,15 +109,15 @@ class WeighingEngine(
 
         // Allow from Idle, Completed, Error, or same WeighingIn (retry)
         val allowedStates =
-                currentState is WeighingState.Idle ||
-                        currentState is WeighingState.Completed ||
-                        currentState is WeighingState.Error ||
-                        currentState is WeighingState.WeighingIn
+            currentState is WeighingState.Idle ||
+                    currentState is WeighingState.Completed ||
+                    currentState is WeighingState.Error ||
+                    currentState is WeighingState.WeighingIn
 
         if (!allowedStates) {
             return WeighingResult.Failure(
-                    "Tidak dapat memulai penimbangan. Selesaikan transaksi aktif terlebih dahulu.",
-                    ErrorType.BUSINESS_RULE_VIOLATION
+                "Tidak dapat memulai penimbangan. Selesaikan transaksi aktif terlebih dahulu.",
+                ErrorType.BUSINESS_RULE_VIOLATION
             )
         }
 
@@ -127,17 +127,17 @@ class WeighingEngine(
         _isManualMode.value = request.isManualMode
 
         _state.value =
-                WeighingState.WeighingIn(
-                        selectedVehicleId = request.vehicleId,
-                        selectedDriverId = request.driverId,
-                        selectedProductId = request.productId,
-                        selectedPartnerId = request.partnerId,
-                        transactionType = request.transactionType,
-                        poDoNumber = request.poDoNumber,
-                        currentWeight = _currentWeight.value,
-                        isStable = false,
-                        isManualMode = request.isManualMode
-                )
+            WeighingState.WeighingIn(
+                selectedVehicleId = request.vehicleId,
+                selectedDriverId = request.driverId,
+                selectedProductId = request.productId,
+                selectedPartnerId = request.partnerId,
+                transactionType = request.transactionType,
+                poDoNumber = request.poDoNumber,
+                currentWeight = _currentWeight.value,
+                isStable = false,
+                isManualMode = request.isManualMode
+            )
 
         return WeighingResult.Success(Unit)
     }
@@ -150,15 +150,15 @@ class WeighingEngine(
 
         // Allow from Idle, Completed, Error, or same WeighingOut (retry)
         val allowedStates =
-                currentState is WeighingState.Idle ||
-                        currentState is WeighingState.Completed ||
-                        currentState is WeighingState.Error ||
-                        currentState is WeighingState.WeighingOut
+            currentState is WeighingState.Idle ||
+                    currentState is WeighingState.Completed ||
+                    currentState is WeighingState.Error ||
+                    currentState is WeighingState.WeighingOut
 
         if (!allowedStates) {
             return WeighingResult.Failure(
-                    "Tidak dapat memulai penimbangan. Selesaikan transaksi aktif terlebih dahulu.",
-                    ErrorType.BUSINESS_RULE_VIOLATION
+                "Tidak dapat memulai penimbangan. Selesaikan transaksi aktif terlebih dahulu.",
+                ErrorType.BUSINESS_RULE_VIOLATION
             )
         }
 
@@ -168,18 +168,18 @@ class WeighingEngine(
         _isManualMode.value = request.isManualMode
 
         _state.value =
-                WeighingState.WeighingOut(
-                        ticketNumber = request.ticketNumber,
-                        firstWeight = request.firstWeight,
-                        transactionType = request.transactionType,
-                        currentWeight = _currentWeight.value,
-                        isStable = false,
-                        isManualMode = request.isManualMode,
-                        vehicleId = request.vehicleId,
-                        driverId = request.driverId,
-                        productId = request.productId,
-                        partnerId = request.partnerId
-                )
+            WeighingState.WeighingOut(
+                ticketNumber = request.ticketNumber,
+                firstWeight = request.firstWeight,
+                transactionType = request.transactionType,
+                currentWeight = _currentWeight.value,
+                isStable = false,
+                isManualMode = request.isManualMode,
+                vehicleId = request.vehicleId,
+                driverId = request.driverId,
+                productId = request.productId,
+                partnerId = request.partnerId
+            )
 
         return WeighingResult.Success(Unit)
     }
@@ -198,8 +198,8 @@ class WeighingEngine(
         // Check stability (or manual mode)
         if (!_isStable.value && !currentState.isManualMode) {
             return WeighingResult.Failure(
-                    "Berat belum stabil. Tunggu hingga stabil sebelum capture.",
-                    ErrorType.UNSTABLE_WEIGHT
+                "Berat belum stabil. Tunggu hingga stabil sebelum capture.",
+                ErrorType.UNSTABLE_WEIGHT
             )
         }
 
@@ -208,8 +208,8 @@ class WeighingEngine(
         // Validate minimum weight
         if (weight < stabilityConfig.minimumWeightKg) {
             return WeighingResult.Failure(
-                    "Berat minimum ${stabilityConfig.minimumWeightKg} kg",
-                    ErrorType.BUSINESS_RULE_VIOLATION
+                "Berat minimum ${stabilityConfig.minimumWeightKg} kg",
+                ErrorType.BUSINESS_RULE_VIOLATION
             )
         }
 
@@ -219,15 +219,15 @@ class WeighingEngine(
 
             // Save to Data Layer
             transactionRepository.createWeighIn(
-                    ticket = ticketNumber,
-                    vehicleId = currentState.selectedVehicleId,
-                    driverId = currentState.selectedDriverId,
-                    productId = currentState.selectedProductId,
-                    partnerId = currentState.selectedPartnerId,
-                    weight = weight,
-                    isManual = currentState.isManualMode,
-                    transactionType = currentState.transactionType,
-                    poDoNumber = currentState.poDoNumber
+                ticket = ticketNumber,
+                vehicleId = currentState.selectedVehicleId,
+                driverId = currentState.selectedDriverId,
+                productId = currentState.selectedProductId,
+                partnerId = currentState.selectedPartnerId,
+                weight = weight,
+                isManual = currentState.isManualMode,
+                transactionType = currentState.transactionType,
+                poDoNumber = currentState.poDoNumber
             )
 
             // Reset to Idle
@@ -252,16 +252,16 @@ class WeighingEngine(
 
         if (currentState !is WeighingState.WeighingOut) {
             return WeighingResult.Failure(
-                    "Not in weigh-out mode",
-                    ErrorType.BUSINESS_RULE_VIOLATION
+                "Not in weigh-out mode",
+                ErrorType.BUSINESS_RULE_VIOLATION
             )
         }
 
         // Check stability (or manual mode)
         if (!_isStable.value && !currentState.isManualMode) {
             return WeighingResult.Failure(
-                    "Berat belum stabil. Tunggu hingga stabil sebelum capture.",
-                    ErrorType.UNSTABLE_WEIGHT
+                "Berat belum stabil. Tunggu hingga stabil sebelum capture.",
+                ErrorType.UNSTABLE_WEIGHT
             )
         }
 
@@ -271,23 +271,24 @@ class WeighingEngine(
         // Validate minimum weight
         if (secondWeight < stabilityConfig.minimumWeightKg) {
             return WeighingResult.Failure(
-                    "Berat minimum ${stabilityConfig.minimumWeightKg} kg",
-                    ErrorType.BUSINESS_RULE_VIOLATION
+                "Berat minimum ${stabilityConfig.minimumWeightKg} kg",
+                ErrorType.BUSINESS_RULE_VIOLATION
             )
         }
 
         // Determine Gross and Tare based on transaction type
         val (grossWeight, tareWeight) =
-                when (currentState.transactionType) {
-                    TransactionType.INBOUND -> {
-                        // Inbound: First = Gross, Second = Tare
-                        Pair(firstWeight, secondWeight)
-                    }
-                    TransactionType.OUTBOUND -> {
-                        // Outbound: First = Tare, Second = Gross
-                        Pair(secondWeight, firstWeight)
-                    }
+            when (currentState.transactionType) {
+                TransactionType.INBOUND -> {
+                    // Inbound: First = Gross, Second = Tare
+                    Pair(firstWeight, secondWeight)
                 }
+
+                TransactionType.OUTBOUND -> {
+                    // Outbound: First = Tare, Second = Gross
+                    Pair(secondWeight, firstWeight)
+                }
+            }
 
         // Calculate Net Weight (absolute difference)
         val netWeight = abs(grossWeight - tareWeight)
@@ -295,43 +296,43 @@ class WeighingEngine(
         // Validate net weight
         if (netWeight <= 0) {
             return WeighingResult.Failure(
-                    "Net weight tidak boleh nol atau negatif",
-                    ErrorType.BUSINESS_RULE_VIOLATION
+                "Net weight tidak boleh nol atau negatif",
+                ErrorType.BUSINESS_RULE_VIOLATION
             )
         }
 
         return try {
             // Update in Data Layer
             transactionRepository.updateWeighOut(
-                    ticket = currentState.ticketNumber,
-                    exitWeight = secondWeight,
-                    netWeight = netWeight
+                ticket = currentState.ticketNumber,
+                exitWeight = secondWeight,
+                netWeight = netWeight
             )
 
             val completedTransaction =
-                    CompletedTransaction(
-                            ticketNumber = currentState.ticketNumber,
-                            vehicleId = currentState.vehicleId,
-                            driverId = currentState.driverId,
-                            productId = currentState.productId,
-                            partnerId = currentState.partnerId,
-                            grossWeight = grossWeight,
-                            tareWeight = tareWeight,
-                            netWeight = netWeight,
-                            transactionType = currentState.transactionType,
-                            isManualEntry = currentState.isManualMode
-                    )
+                CompletedTransaction(
+                    ticketNumber = currentState.ticketNumber,
+                    vehicleId = currentState.vehicleId,
+                    driverId = currentState.driverId,
+                    productId = currentState.productId,
+                    partnerId = currentState.partnerId,
+                    grossWeight = grossWeight,
+                    tareWeight = tareWeight,
+                    netWeight = netWeight,
+                    transactionType = currentState.transactionType,
+                    isManualEntry = currentState.isManualMode
+                )
 
             // Transition to Completed state
             _state.value =
-                    WeighingState.Completed(
-                            ticketNumber = currentState.ticketNumber,
-                            grossWeight = grossWeight,
-                            tareWeight = tareWeight,
-                            netWeight = netWeight,
-                            transactionType = currentState.transactionType
-                            // completedAtMillis uses default System.currentTimeMillis()
-                            )
+                WeighingState.Completed(
+                    ticketNumber = currentState.ticketNumber,
+                    grossWeight = grossWeight,
+                    tareWeight = tareWeight,
+                    netWeight = netWeight,
+                    transactionType = currentState.transactionType
+                    // completedAtMillis uses default System.currentTimeMillis()
+                )
 
             _successMessage.value = "Transaksi selesai! Net: $netWeight kg"
 
@@ -380,9 +381,11 @@ class WeighingEngine(
             is WeighingState.WeighingIn -> {
                 _state.value = currentState.copy(currentWeight = weight, isStable = isStable)
             }
+
             is WeighingState.WeighingOut -> {
                 _state.value = currentState.copy(currentWeight = weight, isStable = isStable)
             }
+
             else -> {
                 /* No weight update needed for other states */
             }

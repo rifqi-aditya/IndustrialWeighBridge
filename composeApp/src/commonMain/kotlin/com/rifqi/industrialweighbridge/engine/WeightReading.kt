@@ -5,10 +5,10 @@ package com.rifqi.industrialweighbridge.engine
  * data.
  */
 data class WeightReading(
-        val weight: Double,
-        val unit: WeightUnit = WeightUnit.KILOGRAM,
-        val isStable: Boolean = false,
-        val timestamp: Long = System.currentTimeMillis()
+    val weight: Double,
+    val unit: WeightUnit = WeightUnit.KILOGRAM,
+    val isStable: Boolean = false,
+    val timestamp: Long = System.currentTimeMillis()
 )
 
 /** Weight measurement units. */
