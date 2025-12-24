@@ -282,8 +282,8 @@ class WeighingViewModel(
                         WeighOutRequest(
                                 ticketNumber = ticketNumber,
                                 firstWeight = entryWeight,
-                                transactionType =
-                                        TransactionType.INBOUND, // TODO: Get from transaction data
+                                transactionType = openTransaction?.transaction_type
+                                                ?: TransactionType.INBOUND,
                                 vehicleId = openTransaction?.vehicle_id ?: 0,
                                 driverId = openTransaction?.driver_id ?: 0,
                                 productId = openTransaction?.product_id ?: 0,

@@ -7,6 +7,7 @@ import com.rifqi.industrialweighbridge.db.SelectOpenTransactions
 import com.rifqi.industrialweighbridge.db.WeighbridgeDatabase
 import com.rifqi.industrialweighbridge.domain.repository.TransactionRepository
 import com.rifqi.industrialweighbridge.domain.utils.DateTimeUtils
+import com.rifqi.industrialweighbridge.engine.TransactionType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 
@@ -28,7 +29,8 @@ class SqlDelightTransactionRepository(db: WeighbridgeDatabase) : TransactionRepo
             driverId: Long,
             productId: Long,
             weight: Double,
-            isManual: Boolean
+            isManual: Boolean,
+            transactionType: TransactionType
     ) {
         val currentTimestamp = DateTimeUtils.nowIsoString()
 
@@ -40,7 +42,8 @@ class SqlDelightTransactionRepository(db: WeighbridgeDatabase) : TransactionRepo
                 user_id = null, // TODO: Set when authentication is implemented
                 weigh_in_timestamp = currentTimestamp,
                 weigh_in_weight = weight,
-                is_manual = if (isManual) 1L else 0L
+                is_manual = if (isManual) 1L else 0L,
+                transaction_type = transactionType
         )
     }
 

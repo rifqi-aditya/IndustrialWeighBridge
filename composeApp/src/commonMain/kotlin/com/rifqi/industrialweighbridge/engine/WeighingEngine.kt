@@ -221,7 +221,8 @@ class WeighingEngine(
                     driverId = currentState.selectedDriverId,
                     productId = currentState.selectedProductId,
                     weight = weight,
-                    isManual = currentState.isManualMode
+                    isManual = currentState.isManualMode,
+                    transactionType = currentState.transactionType
             )
 
             // Reset to Idle

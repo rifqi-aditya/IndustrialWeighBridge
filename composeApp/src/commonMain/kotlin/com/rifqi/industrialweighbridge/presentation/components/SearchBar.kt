@@ -18,44 +18,44 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun SearchBar(
-        query: String,
-        onQueryChange: (String) -> Unit,
-        placeholder: String = "Cari...",
-        modifier: Modifier = Modifier
+    query: String,
+    onQueryChange: (String) -> Unit,
+    placeholder: String = "Cari...",
+    modifier: Modifier = Modifier
 ) {
     OutlinedTextField(
-            value = query,
-            onValueChange = onQueryChange,
-            modifier = modifier.fillMaxWidth().padding(bottom = 16.dp),
-            placeholder = {
-                Text(text = placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            },
-            leadingIcon = {
-                Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Cari",
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = modifier.fillMaxWidth().padding(bottom = 16.dp),
+        placeholder = {
+            Text(text = placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = "Cari",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = "Hapus",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            },
-            trailingIcon = {
-                if (query.isNotEmpty()) {
-                    IconButton(onClick = { onQueryChange("") }) {
-                        Icon(
-                                imageVector = Icons.Default.Clear,
-                                contentDescription = "Hapus",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            },
-            singleLine = true,
-            shape = RoundedCornerShape(12.dp),
-            colors =
-                    OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                            focusedContainerColor = MaterialTheme.colorScheme.surface,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surface
                     )
+                }
+            }
+        },
+        singleLine = true,
+        shape = RoundedCornerShape(12.dp),
+        colors =
+            OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface
+            )
     )
 }
