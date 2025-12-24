@@ -23,6 +23,7 @@ sealed class WeighingState {
                 val selectedVehicleId: Long,
                 val selectedDriverId: Long,
                 val selectedProductId: Long,
+                val selectedPartnerId: Long?,
                 val transactionType: TransactionType,
                 val currentWeight: Double = 0.0,
                 val isStable: Boolean = false,
@@ -41,7 +42,8 @@ sealed class WeighingState {
                 val isManualMode: Boolean = false,
                 val vehicleId: Long,
                 val driverId: Long,
-                val productId: Long
+                val productId: Long,
+                val partnerId: Long?
         ) : WeighingState()
 
         /** Transaction completed successfully. Contains all final data for display/printing. */

@@ -2,6 +2,7 @@ package com.rifqi.industrialweighbridge.data.repository
 
 import app.cash.sqldelight.EnumColumnAdapter
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
+import com.rifqi.industrialweighbridge.db.Partner
 import com.rifqi.industrialweighbridge.db.User
 import com.rifqi.industrialweighbridge.db.WeighbridgeDatabase
 import com.rifqi.industrialweighbridge.db.WeighingTransaction
@@ -19,27 +20,21 @@ class SqlDelightProductRepositoryTest {
     private lateinit var database: WeighbridgeDatabase
     private lateinit var repository: SqlDelightProductRepository
 
-    // @BeforeTest artinya: Jalankan fungsi ini SEBELUM setiap @Test dimulai.
-    // Ini memastikan setiap test mulai dengan database yang bersih (kosong).
     @BeforeTest
     fun setup() {
-        // 1. Buat Driver di Memori
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-
-        // 2. Buat Skema
         WeighbridgeDatabase.Schema.create(driver)
 
-        // 3. Inisialisasi Database dengan ADAPTER
         database =
                 WeighbridgeDatabase(
                         driver = driver,
-
-                        // Memberi tahu cara konversi Enum UserRole <-> Text
                         UserAdapter = User.Adapter(roleAdapter = EnumColumnAdapter()),
-
-                        // Memberi tahu cara konversi Enum TransactionStatus <-> Text
                         WeighingTransactionAdapter =
-                                WeighingTransaction.Adapter(statusAdapter = EnumColumnAdapter())
+                                WeighingTransaction.Adapter(
+                                        statusAdapter = EnumColumnAdapter(),
+                                        transaction_typeAdapter = EnumColumnAdapter()
+                                ),
+                        PartnerAdapter = Partner.Adapter(typeAdapter = EnumColumnAdapter())
                 )
 
         repository = SqlDelightProductRepository(database)

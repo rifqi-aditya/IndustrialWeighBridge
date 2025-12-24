@@ -1,11 +1,14 @@
 package com.rifqi.industrialweighbridge.presentation.viewmodel
 
 import com.rifqi.industrialweighbridge.db.Driver
+import com.rifqi.industrialweighbridge.db.Partner
+import com.rifqi.industrialweighbridge.db.PartnerType
 import com.rifqi.industrialweighbridge.db.Product
 import com.rifqi.industrialweighbridge.db.SelectAllTransactions
 import com.rifqi.industrialweighbridge.db.SelectOpenTransactions
 import com.rifqi.industrialweighbridge.db.Vehicle
 import com.rifqi.industrialweighbridge.domain.usecase.driver.GetAllDriversUseCase
+import com.rifqi.industrialweighbridge.domain.usecase.partner.GetPartnersByTypeUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.product.GetAllProductsUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.transaction.GetAllTransactionsUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.transaction.GetOpenTransactionsUseCase
@@ -41,12 +44,14 @@ data class WeighingUiState(
         val selectedVehicleId: Long? = null,
         val selectedDriverId: Long? = null,
         val selectedProductId: Long? = null,
+        val selectedPartnerId: Long? = null,
         val selectedTransactionType: TransactionType = TransactionType.INBOUND,
 
         // Data lists
         val vehicles: List<Vehicle> = emptyList(),
         val drivers: List<Driver> = emptyList(),
         val products: List<Product> = emptyList(),
+        val partners: List<Partner> = emptyList(),
         val openTransactions: List<SelectOpenTransactions> = emptyList(),
         val allTransactions: List<SelectAllTransactions> = emptyList(),
 
@@ -70,6 +75,7 @@ class WeighingViewModel(
         private val getAllVehiclesUseCase: GetAllVehiclesUseCase,
         private val getAllDriversUseCase: GetAllDriversUseCase,
         private val getAllProductsUseCase: GetAllProductsUseCase,
+        private val getPartnersByTypeUseCase: GetPartnersByTypeUseCase,
         private val getAllTransactionsUseCase: GetAllTransactionsUseCase,
         private val getOpenTransactionsUseCase: GetOpenTransactionsUseCase
 ) {
@@ -141,6 +147,21 @@ class WeighingViewModel(
                 _uiState.value = _uiState.value.copy(products = products)
             }
         }
+        // Load partners based on current transaction type
+        loadPartnersByTransactionType(_uiState.value.selectedTransactionType)
+    }
+
+    private fun loadPartnersByTransactionType(transactionType: TransactionType) {
+        val partnerType =
+                when (transactionType) {
+                    TransactionType.INBOUND -> PartnerType.SUPPLIER
+                    TransactionType.OUTBOUND -> PartnerType.CUSTOMER
+                }
+        scope.launch {
+            getPartnersByTypeUseCase(partnerType).collect { partners ->
+                _uiState.value = _uiState.value.copy(partners = partners, selectedPartnerId = null)
+            }
+        }
     }
 
     private fun loadTransactions() {
@@ -184,8 +205,14 @@ class WeighingViewModel(
         _uiState.value = _uiState.value.copy(selectedProductId = productId)
     }
 
+    fun selectPartner(partnerId: Long?) {
+        _uiState.value = _uiState.value.copy(selectedPartnerId = partnerId)
+    }
+
     fun selectTransactionType(type: TransactionType) {
         _uiState.value = _uiState.value.copy(selectedTransactionType = type)
+        // Reload partners when transaction type changes
+        loadPartnersByTransactionType(type)
     }
 
     // === Weighing Operations ===
@@ -225,6 +252,7 @@ class WeighingViewModel(
                                 vehicleId = state.selectedVehicleId,
                                 driverId = state.selectedDriverId,
                                 productId = state.selectedProductId,
+                                partnerId = state.selectedPartnerId,
                                 transactionType = state.selectedTransactionType,
                                 isManualMode = state.isManualMode
                         )
@@ -249,7 +277,8 @@ class WeighingViewModel(
                                     currentWeight = 0.0,
                                     selectedVehicleId = null,
                                     selectedDriverId = null,
-                                    selectedProductId = null
+                                    selectedProductId = null,
+                                    selectedPartnerId = null
                             )
                 }
                 is WeighingResult.Failure -> {
@@ -287,6 +316,7 @@ class WeighingViewModel(
                                 vehicleId = openTransaction?.vehicle_id ?: 0,
                                 driverId = openTransaction?.driver_id ?: 0,
                                 productId = openTransaction?.product_id ?: 0,
+                                partnerId = openTransaction?.partner_id,
                                 isManualMode = state.isManualMode
                         )
                 )

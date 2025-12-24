@@ -28,6 +28,7 @@ class SqlDelightTransactionRepository(db: WeighbridgeDatabase) : TransactionRepo
             vehicleId: Long,
             driverId: Long,
             productId: Long,
+            partnerId: Long?,
             weight: Double,
             isManual: Boolean,
             transactionType: TransactionType
@@ -39,6 +40,7 @@ class SqlDelightTransactionRepository(db: WeighbridgeDatabase) : TransactionRepo
                 vehicle_id = vehicleId,
                 driver_id = driverId,
                 product_id = productId,
+                partner_id = partnerId,
                 user_id = null, // TODO: Set when authentication is implemented
                 weigh_in_timestamp = currentTimestamp,
                 weigh_in_weight = weight,

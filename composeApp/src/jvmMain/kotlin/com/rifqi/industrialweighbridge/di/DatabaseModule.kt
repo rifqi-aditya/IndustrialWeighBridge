@@ -5,6 +5,7 @@ package com.rifqi.industrialweighbridge.di
 import app.cash.sqldelight.EnumColumnAdapter
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
+import com.rifqi.industrialweighbridge.db.Partner
 import com.rifqi.industrialweighbridge.db.User
 import com.rifqi.industrialweighbridge.db.WeighbridgeDatabase
 import com.rifqi.industrialweighbridge.db.WeighingTransaction
@@ -29,13 +30,16 @@ val databaseModule = module {
     // 2. Definisikan Database Utama
     single {
         WeighbridgeDatabase(
-                driver = get(),
-                UserAdapter = User.Adapter(roleAdapter = EnumColumnAdapter()),
-                WeighingTransactionAdapter =
-                        WeighingTransaction.Adapter(
-                                statusAdapter = EnumColumnAdapter(),
-                                transaction_typeAdapter = EnumColumnAdapter()
-                        )
+            driver = get(),
+            UserAdapter = User.Adapter(roleAdapter = EnumColumnAdapter()),
+            WeighingTransactionAdapter =
+                WeighingTransaction.Adapter(
+                    statusAdapter = EnumColumnAdapter(),
+                    transaction_typeAdapter = EnumColumnAdapter()
+                ),
+            PartnerAdapter = Partner.Adapter(
+                typeAdapter = EnumColumnAdapter(),
+            )
         )
     }
 }

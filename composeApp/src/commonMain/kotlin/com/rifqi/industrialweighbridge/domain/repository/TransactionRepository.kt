@@ -18,6 +18,7 @@ interface TransactionRepository {
             vehicleId: Long,
             driverId: Long,
             productId: Long,
+            partnerId: Long?,
             weight: Double,
             isManual: Boolean,
             transactionType: TransactionType

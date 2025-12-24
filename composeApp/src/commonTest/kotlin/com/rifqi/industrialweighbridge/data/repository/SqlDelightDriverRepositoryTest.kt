@@ -2,6 +2,7 @@ package com.rifqi.industrialweighbridge.data.repository
 
 import app.cash.sqldelight.EnumColumnAdapter
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
+import com.rifqi.industrialweighbridge.db.Partner
 import com.rifqi.industrialweighbridge.db.User
 import com.rifqi.industrialweighbridge.db.WeighbridgeDatabase
 import com.rifqi.industrialweighbridge.db.WeighingTransaction
@@ -32,13 +33,13 @@ class SqlDelightDriverRepositoryTest {
         database =
                 WeighbridgeDatabase(
                         driver = driver,
-
-                        // Memberi tahu cara konversi Enum UserRole <-> Text
                         UserAdapter = User.Adapter(roleAdapter = EnumColumnAdapter()),
-
-                        // Memberi tahu cara konversi Enum TransactionStatus <-> Text
                         WeighingTransactionAdapter =
-                                WeighingTransaction.Adapter(statusAdapter = EnumColumnAdapter())
+                                WeighingTransaction.Adapter(
+                                        statusAdapter = EnumColumnAdapter(),
+                                        transaction_typeAdapter = EnumColumnAdapter()
+                                ),
+                        PartnerAdapter = Partner.Adapter(typeAdapter = EnumColumnAdapter())
                 )
 
         repository = SqlDelightDriverRepository(database)

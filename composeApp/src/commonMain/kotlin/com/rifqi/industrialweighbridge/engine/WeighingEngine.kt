@@ -131,6 +131,7 @@ class WeighingEngine(
                         selectedVehicleId = request.vehicleId,
                         selectedDriverId = request.driverId,
                         selectedProductId = request.productId,
+                        selectedPartnerId = request.partnerId,
                         transactionType = request.transactionType,
                         currentWeight = _currentWeight.value,
                         isStable = false,
@@ -175,7 +176,8 @@ class WeighingEngine(
                         isManualMode = request.isManualMode,
                         vehicleId = request.vehicleId,
                         driverId = request.driverId,
-                        productId = request.productId
+                        productId = request.productId,
+                        partnerId = request.partnerId
                 )
 
         return WeighingResult.Success(Unit)
@@ -220,6 +222,7 @@ class WeighingEngine(
                     vehicleId = currentState.selectedVehicleId,
                     driverId = currentState.selectedDriverId,
                     productId = currentState.selectedProductId,
+                    partnerId = currentState.selectedPartnerId,
                     weight = weight,
                     isManual = currentState.isManualMode,
                     transactionType = currentState.transactionType
@@ -309,6 +312,7 @@ class WeighingEngine(
                             vehicleId = currentState.vehicleId,
                             driverId = currentState.driverId,
                             productId = currentState.productId,
+                            partnerId = currentState.partnerId,
                             grossWeight = grossWeight,
                             tareWeight = tareWeight,
                             netWeight = netWeight,

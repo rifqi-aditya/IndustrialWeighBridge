@@ -6,6 +6,7 @@ import com.rifqi.industrialweighbridge.domain.model.CompanySettings
 import com.rifqi.industrialweighbridge.domain.model.PaperSize
 import com.rifqi.industrialweighbridge.domain.model.PrintSettings
 import com.rifqi.industrialweighbridge.domain.utils.DateTimeUtils
+import com.rifqi.industrialweighbridge.engine.TransactionType
 import com.rifqi.industrialweighbridge.presentation.utils.WeightFormatter
 import java.io.File
 import java.io.FileOutputStream
@@ -205,7 +206,11 @@ object TicketPdfGenerator {
     <!-- TRANSACTION INFO -->
     <table class="info-table">
         <tr>
-            <td class="label">Customer</td>
+            <td class="label">${if (transaction.transaction_type == TransactionType.INBOUND) "Supplier" else "Customer"}</td>
+            <td>: ${transaction.partner_name ?: "-"}</td>
+        </tr>
+        <tr>
+            <td class="label">Sopir</td>
             <td>: ${transaction.driver_name ?: "-"}</td>
         </tr>
         <tr>

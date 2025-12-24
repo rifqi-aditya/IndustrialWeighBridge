@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Person
@@ -34,54 +35,51 @@ fun MasterDataScreen() {
     var selectedTabIndex by remember { mutableStateOf(0) }
 
     val tabs =
-        listOf(
-            MasterDataTab("Driver", Icons.Default.Person),
-            MasterDataTab("Kendaraan", Icons.Default.LocalShipping),
-            MasterDataTab("Produk", Icons.Default.Inventory2)
-        )
+            listOf(
+                    MasterDataTab("Driver", Icons.Default.Person),
+                    MasterDataTab("Kendaraan", Icons.Default.LocalShipping),
+                    MasterDataTab("Produk", Icons.Default.Inventory2),
+                    MasterDataTab("Partner", Icons.Default.Business)
+            )
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Header
         Text(
-            text = "Master Data",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(bottom = 16.dp)
+                text = "Master Data",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(bottom = 16.dp)
         )
 
         // Tab Row (Using SecondaryTabRow as TabRow is deprecated)
         SecondaryTabRow(
-            selectedTabIndex = selectedTabIndex,
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.primary
+                selectedTabIndex = selectedTabIndex,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary
         ) {
             tabs.forEachIndexed { index, tab ->
                 Tab(
-                    selected = selectedTabIndex == index,
-                    onClick = { selectedTabIndex = index },
-                    text = {
-                        Text(
-                            text = tab.title,
-                            fontWeight =
-                                if (selectedTabIndex == index)
-                                    FontWeight.Bold
-                                else FontWeight.Normal
-                        )
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = tab.icon,
-                            contentDescription = tab.title,
-                            tint =
-                                if (selectedTabIndex == index)
-                                    MaterialTheme.colorScheme
-                                        .primary
-                                else
-                                    MaterialTheme.colorScheme
-                                        .onSurfaceVariant
-                        )
-                    }
+                        selected = selectedTabIndex == index,
+                        onClick = { selectedTabIndex = index },
+                        text = {
+                            Text(
+                                    text = tab.title,
+                                    fontWeight =
+                                            if (selectedTabIndex == index) FontWeight.Bold
+                                            else FontWeight.Normal
+                            )
+                        },
+                        icon = {
+                            Icon(
+                                    imageVector = tab.icon,
+                                    contentDescription = tab.title,
+                                    tint =
+                                            if (selectedTabIndex == index)
+                                                    MaterialTheme.colorScheme.primary
+                                            else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                 )
             }
         }
@@ -94,11 +92,12 @@ fun MasterDataScreen() {
             0 -> DriverListContent()
             1 -> VehicleListContent()
             2 -> ProductListContent()
+            3 -> PartnerListContent()
         }
     }
 }
 
 private data class MasterDataTab(
-    val title: String,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector
+        val title: String,
+        val icon: androidx.compose.ui.graphics.vector.ImageVector
 )

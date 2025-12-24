@@ -4,10 +4,12 @@ package com.rifqi.industrialweighbridge.di
 // Infrastructure Layer
 import com.rifqi.industrialweighbridge.data.repository.SettingsRepository
 import com.rifqi.industrialweighbridge.data.repository.SqlDelightDriverRepository
+import com.rifqi.industrialweighbridge.data.repository.SqlDelightPartnerRepository
 import com.rifqi.industrialweighbridge.data.repository.SqlDelightProductRepository
 import com.rifqi.industrialweighbridge.data.repository.SqlDelightTransactionRepository
 import com.rifqi.industrialweighbridge.data.repository.SqlDelightVehicleRepository
 import com.rifqi.industrialweighbridge.domain.repository.DriverRepository
+import com.rifqi.industrialweighbridge.domain.repository.PartnerRepository
 import com.rifqi.industrialweighbridge.domain.repository.ProductRepository
 import com.rifqi.industrialweighbridge.domain.repository.TransactionRepository
 import com.rifqi.industrialweighbridge.domain.repository.VehicleRepository
@@ -15,6 +17,11 @@ import com.rifqi.industrialweighbridge.domain.usecase.driver.AddDriverUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.driver.DeleteDriverUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.driver.GetAllDriversUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.driver.UpdateDriverUseCase
+import com.rifqi.industrialweighbridge.domain.usecase.partner.AddPartnerUseCase
+import com.rifqi.industrialweighbridge.domain.usecase.partner.DeletePartnerUseCase
+import com.rifqi.industrialweighbridge.domain.usecase.partner.GetAllPartnersUseCase
+import com.rifqi.industrialweighbridge.domain.usecase.partner.GetPartnersByTypeUseCase
+import com.rifqi.industrialweighbridge.domain.usecase.partner.UpdatePartnerUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.product.AddProductUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.product.DeleteProductUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.product.GetAllProductsUseCase
@@ -31,6 +38,7 @@ import com.rifqi.industrialweighbridge.infrastructure.AuditLogger
 import com.rifqi.industrialweighbridge.infrastructure.InMemoryAuditLogger
 import com.rifqi.industrialweighbridge.presentation.viewmodel.DashboardViewModel
 import com.rifqi.industrialweighbridge.presentation.viewmodel.DriverViewModel
+import com.rifqi.industrialweighbridge.presentation.viewmodel.PartnerViewModel
 import com.rifqi.industrialweighbridge.presentation.viewmodel.ProductViewModel
 import com.rifqi.industrialweighbridge.presentation.viewmodel.VehicleViewModel
 import com.rifqi.industrialweighbridge.presentation.viewmodel.WeighingViewModel
@@ -48,6 +56,8 @@ val appModule = module {
     single<DriverRepository> { SqlDelightDriverRepository(db = get()) }
 
     single<ProductRepository> { SqlDelightProductRepository(db = get()) }
+
+    single<PartnerRepository> { SqlDelightPartnerRepository(db = get()) }
 
     // --- Transaction Repository ---
     single<TransactionRepository> { SqlDelightTransactionRepository(db = get()) }
@@ -86,6 +96,13 @@ val appModule = module {
     factory { UpdateVehicleUseCase(get()) }
     factory { DeleteVehicleUseCase(get()) }
 
+    // --- Partner Use Cases ---
+    factory { GetAllPartnersUseCase(get()) }
+    factory { GetPartnersByTypeUseCase(get()) }
+    factory { AddPartnerUseCase(get()) }
+    factory { UpdatePartnerUseCase(get()) }
+    factory { DeletePartnerUseCase(get()) }
+
     // --- Transaction Use Cases ---
     factory { GetAllTransactionsUseCase(get()) }
     factory { GetOpenTransactionsUseCase(get()) }
@@ -95,6 +112,7 @@ val appModule = module {
     factory { DriverViewModel(get(), get(), get(), get()) }
     factory { VehicleViewModel(get(), get(), get(), get()) }
     factory { ProductViewModel(get(), get(), get(), get()) }
+    factory { PartnerViewModel(get(), get(), get(), get()) }
     // WeighingViewModel now uses WeighingEngine as single source of truth
     factory {
         WeighingViewModel(
@@ -102,6 +120,7 @@ val appModule = module {
                 getAllVehiclesUseCase = get(),
                 getAllDriversUseCase = get(),
                 getAllProductsUseCase = get(),
+                getPartnersByTypeUseCase = get(),
                 getAllTransactionsUseCase = get(),
                 getOpenTransactionsUseCase = get()
         )

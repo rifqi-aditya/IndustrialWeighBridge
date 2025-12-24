@@ -5,9 +5,6 @@ import kotlinx.datetime.Instant
 /**
  * Interface for audit logging.
  *
- * According to HLD Section 4.3: "Core Weighing Engine mencatat aktivitas ini ke Audit Log" (for
- * manual mode)
- *
  * And Section 4.4: "Aktivitas kesalahan dicatat ke dalam Audit Log jika bersifat kritis."
  */
 interface AuditLogger {

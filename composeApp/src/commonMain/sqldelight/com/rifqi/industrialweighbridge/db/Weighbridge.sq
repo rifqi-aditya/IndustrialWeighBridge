@@ -1,5 +1,6 @@
 import com.rifqi.industrialweighbridge.db.TransactionStatus;
 import com.rifqi.industrialweighbridge.db.UserRole;
+import com.rifqi.industrialweighbridge.db.PartnerType;
 import com.rifqi.industrialweighbridge.engine.TransactionType;
 
 -- FILE: Weighbridge.sq
@@ -31,6 +32,17 @@ CREATE TABLE Product (
     code TEXT
 );
 
+-- Partner table (unified Supplier/Customer with soft delete)
+CREATE TABLE Partner (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    type TEXT AS PartnerType NOT NULL,
+    address TEXT,
+    phone TEXT,
+    code TEXT,
+    is_deleted INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE TABLE WeighingTransaction (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     ticket_number TEXT NOT NULL UNIQUE,
@@ -39,6 +51,7 @@ CREATE TABLE WeighingTransaction (
     vehicle_id INTEGER,
     driver_id INTEGER,
     product_id INTEGER,
+    partner_id INTEGER,
     user_id INTEGER, -- Operator
 
     -- Weigh In Data
@@ -58,12 +71,14 @@ CREATE TABLE WeighingTransaction (
     FOREIGN KEY (vehicle_id) REFERENCES Vehicle(id),
     FOREIGN KEY (driver_id) REFERENCES Driver(id),
     FOREIGN KEY (product_id) REFERENCES Product(id),
+    FOREIGN KEY (partner_id) REFERENCES Partner(id),
     FOREIGN KEY (user_id) REFERENCES User(id)
 );
 
 -- Index agar pencarian cepat
 CREATE INDEX idx_transaction_ticket ON WeighingTransaction(ticket_number);
 CREATE INDEX idx_vehicle_plate ON Vehicle(plate_number);
+CREATE INDEX idx_partner_name ON Partner(name);
 
 -- ==========================================
 -- 2. QUERIES (Fungsi Kotlin yang akan digenerate)
@@ -116,6 +131,22 @@ UPDATE Product SET name = ?, code = ? WHERE id = ?;
 deleteProduct:
 DELETE FROM Product WHERE id = ?;
 
+-- Partner (Supplier/Customer)
+selectAllPartners:
+SELECT * FROM Partner WHERE is_deleted = 0 ORDER BY name ASC;
+
+selectPartnersByType:
+SELECT * FROM Partner WHERE is_deleted = 0 AND (type = ? OR type = 'BOTH') ORDER BY name ASC;
+
+insertPartner:
+INSERT INTO Partner (name, type, address, phone, code) VALUES (?, ?, ?, ?, ?);
+
+updatePartner:
+UPDATE Partner SET name = ?, type = ?, address = ?, phone = ?, code = ? WHERE id = ?;
+
+softDeletePartner:
+UPDATE Partner SET is_deleted = 1 WHERE id = ?;
+
 -- C. TRANSACTION Queries
 -- Ambil semua transaksi (terbaru diatas)
 selectAllTransactions:
@@ -123,29 +154,33 @@ SELECT
     T.*,
     V.plate_number,
     D.name AS driver_name,
-    P.name AS product_name
+    P.name AS product_name,
+    PT.name AS partner_name
 FROM WeighingTransaction T
 LEFT JOIN Vehicle V ON T.vehicle_id = V.id
 LEFT JOIN Driver D ON T.driver_id = D.id
 LEFT JOIN Product P ON T.product_id = P.id
+LEFT JOIN Partner PT ON T.partner_id = PT.id
 ORDER BY T.id DESC;
 
 -- Ambil transaksi yang masih 'OPEN' (Belum Weigh Out)
 selectOpenTransactions:
 SELECT
     T.*,
-    V.plate_number
+    V.plate_number,
+    PT.name AS partner_name
 FROM WeighingTransaction T
 LEFT JOIN Vehicle V ON T.vehicle_id = V.id
+LEFT JOIN Partner PT ON T.partner_id = PT.id
 WHERE T.status = 'OPEN'
 ORDER BY T.weigh_in_timestamp DESC;
 
 -- Simpan Weigh In (Masuk)
 insertWeighIn:
 INSERT INTO WeighingTransaction (
-    ticket_number, vehicle_id, driver_id, product_id, user_id,
+    ticket_number, vehicle_id, driver_id, product_id, partner_id, user_id,
     weigh_in_timestamp, weigh_in_weight, status, is_manual, transaction_type
-) VALUES (?, ?, ?, ?, ?, ?, ?, 'OPEN', ?, ?);
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'OPEN', ?, ?);
 
 -- Simpan Weigh Out (Keluar / Update)
 updateWeighOut:
