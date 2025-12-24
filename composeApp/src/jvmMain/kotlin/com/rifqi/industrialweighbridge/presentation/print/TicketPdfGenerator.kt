@@ -8,8 +8,11 @@ import com.rifqi.industrialweighbridge.domain.model.PrintSettings
 import com.rifqi.industrialweighbridge.domain.utils.DateTimeUtils
 import com.rifqi.industrialweighbridge.engine.TransactionType
 import com.rifqi.industrialweighbridge.presentation.utils.WeightFormatter
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.util.Base64
+import javax.imageio.ImageIO
 
 /**
  * Generates PDF tickets using HTML template - MUCH EASIER TO MODIFY!
@@ -17,6 +20,32 @@ import java.io.FileOutputStream
  * Just edit the HTML/CSS below to change the ticket layout.
  */
 object TicketPdfGenerator {
+
+    /** Convert image file to base64 data URI for embedding in HTML */
+    private fun imageToBase64DataUri(imagePath: String): String? {
+        return try {
+            val file = File(imagePath)
+            if (!file.exists()) return null
+
+            val image = ImageIO.read(file) ?: return null
+            val baos = ByteArrayOutputStream()
+
+            // Determine format from extension
+            val extension = imagePath.substringAfterLast(".").lowercase()
+            val format =
+                    when (extension) {
+                        "png" -> "png"
+                        "jpg", "jpeg" -> "jpeg"
+                        else -> "png"
+                    }
+
+            ImageIO.write(image, format, baos)
+            val base64 = Base64.getEncoder().encodeToString(baos.toByteArray())
+            "data:image/$format;base64,$base64"
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     /** Generates a PDF ticket for a transaction */
     fun generateTicket(
@@ -60,6 +89,9 @@ object TicketPdfGenerator {
                     PaperSize.THERMAL_80MM -> "80mm"
                     PaperSize.THERMAL_58MM -> "58mm"
                 }
+
+        // Convert logo to base64 data URI for PDF embedding
+        val logoDataUri = company.logoPath?.let { imageToBase64DataUri(it) }
 
         return """
 <!DOCTYPE html>
@@ -181,17 +213,19 @@ object TicketPdfGenerator {
     <div class="header">
         <table class="header-table">
             <tr>
-                ${if (settings.showLogo) """<td class="header-logo"><div class="logo-placeholder">[LOGO]</div></td>""" else ""}
+                ${if (settings.showLogo && logoDataUri != null) """<td class="header-logo"><img src="$logoDataUri" style="max-width: 80px; max-height: 50px;" /></td>""" else if (settings.showLogo) """<td class="header-logo"><div class="logo-placeholder">[LOGO]</div></td>""" else ""}
                 <td class="header-info">
                     <div class="company-name">${company.companyName.ifBlank { "WEIGHBRIDGE" }}</div>
                     <div class="company-address">${company.companyAddress}</div>
-                    ${if (company.companyPhone.isNotBlank() || company.companyFax.isNotBlank()) """
+                    ${
+            if (company.companyPhone.isNotBlank() || company.companyFax.isNotBlank()) """
                     <div class="company-address">
                         ${if (company.companyPhone.isNotBlank()) "Telp: ${company.companyPhone}" else ""}
                         ${if (company.companyPhone.isNotBlank() && company.companyFax.isNotBlank()) " | " else ""}
                         ${if (company.companyFax.isNotBlank()) "Fax: ${company.companyFax}" else ""}
                     </div>
-                    """ else ""}
+                    """ else ""
+        }
                 </td>
             </tr>
         </table>
@@ -223,7 +257,7 @@ object TicketPdfGenerator {
         </tr>
         <tr>
             <td class="label">No PO/DO</td>
-            <td>: -</td>
+            <td>: ${transaction.po_do_number ?: "-"}</td>
         </tr>
     </table>
 
@@ -247,7 +281,13 @@ object TicketPdfGenerator {
         </tr>
         <tr>
             <td class="label">Tare</td>
-            <td style="padding-bottom: 5px;">: <span style="display: inline-block; border-bottom: 1px solid #000; padding-bottom: 3px;">${transaction.weigh_out_weight?.let { WeightFormatter.formatWeight(it) } ?: "-"}</span></td>
+            <td style="padding-bottom: 5px;">: <span style="display: inline-block; border-bottom: 1px solid #000; padding-bottom: 3px;">${
+            transaction.weigh_out_weight?.let {
+                WeightFormatter.formatWeight(
+                    it
+                )
+            } ?: "-"
+        }</span></td>
         </tr>
         <tr>
             <td class="label">Netto</td>
@@ -279,9 +319,11 @@ object TicketPdfGenerator {
     </div>
 
     <!-- FOOTER -->
-    ${if (settings.footerText.isNotBlank()) """
+    ${
+            if (settings.footerText.isNotBlank()) """
     <div class="footer">${settings.footerText}</div>
-    """ else ""}
+    """ else ""
+        }
 </body>
 </html>
         """.trimIndent()

@@ -31,7 +31,8 @@ class SqlDelightTransactionRepository(db: WeighbridgeDatabase) : TransactionRepo
             partnerId: Long?,
             weight: Double,
             isManual: Boolean,
-            transactionType: TransactionType
+            transactionType: TransactionType,
+            poDoNumber: String?
     ) {
         val currentTimestamp = DateTimeUtils.nowIsoString()
 
@@ -45,7 +46,8 @@ class SqlDelightTransactionRepository(db: WeighbridgeDatabase) : TransactionRepo
                 weigh_in_timestamp = currentTimestamp,
                 weigh_in_weight = weight,
                 is_manual = if (isManual) 1L else 0L,
-                transaction_type = transactionType
+                transaction_type = transactionType,
+                po_do_number = poDoNumber
         )
     }
 

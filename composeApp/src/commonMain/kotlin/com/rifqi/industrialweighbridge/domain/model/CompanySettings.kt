@@ -5,5 +5,6 @@ data class CompanySettings(
         val companyName: String = "",
         val companyAddress: String = "",
         val companyPhone: String = "",
-        val companyFax: String = ""
+        val companyFax: String = "",
+        val logoPath: String? = null
 )

@@ -13,6 +13,7 @@ data class WeighInRequest(
         val productId: Long,
         val partnerId: Long?,
         val transactionType: TransactionType,
+        val poDoNumber: String? = null,
         val isManualMode: Boolean = false
 )
 
@@ -25,6 +26,7 @@ data class WeighOutRequest(
         val driverId: Long,
         val productId: Long,
         val partnerId: Long?,
+        val poDoNumber: String? = null,
         val isManualMode: Boolean = false
 )
 

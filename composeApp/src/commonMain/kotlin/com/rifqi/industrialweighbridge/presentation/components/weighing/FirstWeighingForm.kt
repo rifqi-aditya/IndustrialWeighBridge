@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Person
@@ -301,6 +302,22 @@ fun FirstWeighingForm(viewModel: WeighingViewModel) {
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // PO / DO Number
+            SectionHeader(icon = Icons.Default.Description, title = "No. PO / DO")
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                    value = uiState.poDoNumber ?: "",
+                    onValueChange = { viewModel.setPoDoNumber(it) },
+                    label = { Text("Nomor PO / DO (Opsional)") },
+                    placeholder = { Text("Contoh: PO-2023-001") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+            )
 
             Spacer(modifier = Modifier.height(32.dp))
 

@@ -25,6 +25,7 @@ sealed class WeighingState {
                 val selectedProductId: Long,
                 val selectedPartnerId: Long?,
                 val transactionType: TransactionType,
+                val poDoNumber: String? = null,
                 val currentWeight: Double = 0.0,
                 val isStable: Boolean = false,
                 val isManualMode: Boolean = false

@@ -15,6 +15,7 @@ class SettingsRepository {
         const val KEY_COMPANY_ADDRESS = "company_address"
         const val KEY_COMPANY_PHONE = "company_phone"
         const val KEY_COMPANY_FAX = "company_fax"
+        const val KEY_LOGO_PATH = "logo_path"
 
         const val KEY_PAPER_SIZE = "paper_size"
         const val KEY_SHOW_LOGO = "show_logo"
@@ -28,6 +29,11 @@ class SettingsRepository {
         settings.putString(KEY_COMPANY_ADDRESS, companySettings.companyAddress)
         settings.putString(KEY_COMPANY_PHONE, companySettings.companyPhone)
         settings.putString(KEY_COMPANY_FAX, companySettings.companyFax)
+        if (companySettings.logoPath != null) {
+            settings.putString(KEY_LOGO_PATH, companySettings.logoPath)
+        } else {
+            settings.remove(KEY_LOGO_PATH)
+        }
     }
 
     fun loadCompanySettings(): CompanySettings {
@@ -35,7 +41,8 @@ class SettingsRepository {
                 companyName = settings.getStringOrNull(KEY_COMPANY_NAME) ?: "",
                 companyAddress = settings.getStringOrNull(KEY_COMPANY_ADDRESS) ?: "",
                 companyPhone = settings.getStringOrNull(KEY_COMPANY_PHONE) ?: "",
-                companyFax = settings.getStringOrNull(KEY_COMPANY_FAX) ?: ""
+                companyFax = settings.getStringOrNull(KEY_COMPANY_FAX) ?: "",
+                logoPath = settings.getStringOrNull(KEY_LOGO_PATH)
         )
     }
 

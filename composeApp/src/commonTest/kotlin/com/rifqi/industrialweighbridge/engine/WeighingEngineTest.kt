@@ -25,7 +25,8 @@ class FakeTransactionRepository : TransactionRepository {
                 val partnerId: Long?,
                 val weight: Double,
                 val isManual: Boolean,
-                val transactionType: TransactionType
+                val transactionType: TransactionType,
+                val poDoNumber: String?
         )
 
         data class CompletedTransactionData(
@@ -46,7 +47,8 @@ class FakeTransactionRepository : TransactionRepository {
                 partnerId: Long?,
                 weight: Double,
                 isManual: Boolean,
-                transactionType: TransactionType
+                transactionType: TransactionType,
+                poDoNumber: String?
         ) {
                 createdTransactions.add(
                         CreatedTransaction(
@@ -57,7 +59,8 @@ class FakeTransactionRepository : TransactionRepository {
                                 partnerId,
                                 weight,
                                 isManual,
-                                transactionType
+                                transactionType,
+                                poDoNumber
                         )
                 )
         }

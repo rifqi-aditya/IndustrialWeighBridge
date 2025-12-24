@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Save
@@ -27,6 +28,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -44,6 +46,7 @@ import com.rifqi.industrialweighbridge.data.repository.SettingsRepository
 import com.rifqi.industrialweighbridge.domain.model.CompanySettings
 import com.rifqi.industrialweighbridge.domain.model.PaperSize
 import com.rifqi.industrialweighbridge.domain.model.PrintSettings
+import com.rifqi.industrialweighbridge.presentation.components.CompanySettingsDialog
 import com.rifqi.industrialweighbridge.presentation.theme.LocalThemeState
 import org.koin.compose.koinInject
 
@@ -55,11 +58,8 @@ fun SettingsScreen() {
         val scrollState = rememberScrollState()
 
         // Company Settings State
-        var companyName by remember { mutableStateOf("") }
-        var companyAddress by remember { mutableStateOf("") }
-        var companyPhone by remember { mutableStateOf("") }
-        var companyFax by remember { mutableStateOf("") }
-        var companySaved by remember { mutableStateOf(false) }
+        var companySettings by remember { mutableStateOf(CompanySettings()) }
+        var showCompanyDialog by remember { mutableStateOf(false) }
 
         // Print Settings State
         var selectedPaperSize by remember { mutableStateOf(PaperSize.A4) }
@@ -70,16 +70,56 @@ fun SettingsScreen() {
 
         // Load settings on start
         LaunchedEffect(Unit) {
-                val company = settingsRepository.loadCompanySettings()
-                companyName = company.companyName
-                companyAddress = company.companyAddress
-                companyPhone = company.companyPhone
-                companyFax = company.companyFax
+                companySettings = settingsRepository.loadCompanySettings()
 
                 val print = settingsRepository.loadPrintSettings()
                 selectedPaperSize = print.paperSize
                 showLogo = print.showLogo
                 footerText = print.footerText
+        }
+
+        // Company Settings Dialog
+        if (showCompanyDialog) {
+                CompanySettingsDialog(
+                        initialName = companySettings.companyName,
+                        initialAddress = companySettings.companyAddress,
+                        initialPhone = companySettings.companyPhone,
+                        initialFax = companySettings.companyFax,
+                        initialLogoPath = companySettings.logoPath,
+                        onDismiss = { showCompanyDialog = false },
+                        onConfirm = { name, address, phone, fax, logoPath ->
+                                val newSettings =
+                                        CompanySettings(
+                                                companyName = name,
+                                                companyAddress = address,
+                                                companyPhone = phone,
+                                                companyFax = fax,
+                                                logoPath = logoPath
+                                        )
+                                settingsRepository.saveCompanySettings(newSettings)
+                                companySettings = newSettings
+                                showCompanyDialog = false
+                        },
+                        onSelectLogo = { onLogoSelected ->
+                                // Using native FileDialog for Windows native file picker
+                                val dialog =
+                                        java.awt.FileDialog(
+                                                null as java.awt.Frame?,
+                                                "Pilih Logo Perusahaan",
+                                                java.awt.FileDialog.LOAD
+                                        )
+                                dialog.setFilenameFilter { _, name ->
+                                        val lower = name.lowercase()
+                                        lower.endsWith(".png") ||
+                                                lower.endsWith(".jpg") ||
+                                                lower.endsWith(".jpeg")
+                                }
+                                dialog.isVisible = true
+                                if (dialog.file != null) {
+                                        onLogoSelected(dialog.directory + dialog.file)
+                                }
+                        }
+                )
         }
 
         Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
@@ -91,7 +131,7 @@ fun SettingsScreen() {
                         modifier = Modifier.padding(bottom = 24.dp)
                 )
 
-                // ==================== COMPANY SETTINGS ====================
+                // ==================== COMPANY SETTINGS (Summary Card) ====================
                 Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -102,93 +142,99 @@ fun SettingsScreen() {
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                         Column(modifier = Modifier.padding(20.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                                imageVector = Icons.Default.Business,
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.primary
-                                        )
-                                        Spacer(modifier = Modifier.width(12.dp))
+                                Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                        imageVector = Icons.Default.Business,
+                                                        contentDescription = null,
+                                                        tint = MaterialTheme.colorScheme.primary
+                                                )
+                                                Spacer(modifier = Modifier.width(12.dp))
+                                                Text(
+                                                        text = "Data Perusahaan",
+                                                        style =
+                                                                MaterialTheme.typography
+                                                                        .titleMedium,
+                                                        color = MaterialTheme.colorScheme.onSurface
+                                                )
+                                        }
+                                        OutlinedButton(onClick = { showCompanyDialog = true }) {
+                                                Icon(Icons.Default.Edit, contentDescription = null)
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text("Edit")
+                                        }
+                                }
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                // Company Info Summary
+                                if (companySettings.companyName.isNotBlank()) {
                                         Text(
-                                                text = "Data Perusahaan",
-                                                style = MaterialTheme.typography.titleMedium,
+                                                text = companySettings.companyName,
+                                                style = MaterialTheme.typography.titleLarge,
                                                 color = MaterialTheme.colorScheme.onSurface
                                         )
-                                }
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                OutlinedTextField(
-                                        value = companyName,
-                                        onValueChange = {
-                                                companyName = it
-                                                companySaved = false
-                                        },
-                                        label = { Text("Nama Perusahaan") },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        singleLine = true
-                                )
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                OutlinedTextField(
-                                        value = companyAddress,
-                                        onValueChange = {
-                                                companyAddress = it
-                                                companySaved = false
-                                        },
-                                        label = { Text("Alamat") },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        maxLines = 2
-                                )
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                Row(modifier = Modifier.fillMaxWidth()) {
-                                        OutlinedTextField(
-                                                value = companyPhone,
-                                                onValueChange = {
-                                                        companyPhone = it
-                                                        companySaved = false
-                                                },
-                                                label = { Text("No. Telepon") },
-                                                modifier = Modifier.weight(1f),
-                                                singleLine = true
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        OutlinedTextField(
-                                                value = companyFax,
-                                                onValueChange = {
-                                                        companyFax = it
-                                                        companySaved = false
-                                                },
-                                                label = { Text("No. Fax") },
-                                                modifier = Modifier.weight(1f),
-                                                singleLine = true
-                                        )
-                                }
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                Button(
-                                        onClick = {
-                                                settingsRepository.saveCompanySettings(
-                                                        CompanySettings(
-                                                                companyName = companyName,
-                                                                companyAddress = companyAddress,
-                                                                companyPhone = companyPhone,
-                                                                companyFax = companyFax
-                                                        )
+                                        if (companySettings.companyAddress.isNotBlank()) {
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                Text(
+                                                        text = companySettings.companyAddress,
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        color =
+                                                                MaterialTheme.colorScheme
+                                                                        .onSurfaceVariant
                                                 )
-                                                companySaved = true
-                                        },
-                                        modifier = Modifier.align(Alignment.End)
-                                ) {
-                                        Icon(Icons.Default.Save, contentDescription = null)
-                                        Spacer(modifier = Modifier.width(8.dp))
+                                        }
+                                        if (companySettings.companyPhone.isNotBlank() ||
+                                                        companySettings.companyFax.isNotBlank()
+                                        ) {
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                val contactInfo = buildString {
+                                                        if (companySettings.companyPhone
+                                                                        .isNotBlank()
+                                                        ) {
+                                                                append(
+                                                                        "Telp: ${companySettings.companyPhone}"
+                                                                )
+                                                        }
+                                                        if (companySettings.companyFax.isNotBlank()
+                                                        ) {
+                                                                if (isNotEmpty()) append(" | ")
+                                                                append(
+                                                                        "Fax: ${companySettings.companyFax}"
+                                                                )
+                                                        }
+                                                }
+                                                Text(
+                                                        text = contactInfo,
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color =
+                                                                MaterialTheme.colorScheme
+                                                                        .onSurfaceVariant
+                                                )
+                                        }
+                                        if (companySettings.logoPath != null) {
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                Text(
+                                                        text = "✓ Logo tersimpan",
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MaterialTheme.colorScheme.primary
+                                                )
+                                        }
+                                } else {
                                         Text(
-                                                if (companySaved) "Tersimpan ✓"
-                                                else "Simpan Data Perusahaan"
+                                                text = "Belum ada data perusahaan",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                                text =
+                                                        "Klik Edit untuk menambahkan data perusahaan",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                 }
                         }

@@ -46,6 +46,7 @@ data class WeighingUiState(
         val selectedProductId: Long? = null,
         val selectedPartnerId: Long? = null,
         val selectedTransactionType: TransactionType = TransactionType.INBOUND,
+        val poDoNumber: String? = null,
 
         // Data lists
         val vehicles: List<Vehicle> = emptyList(),
@@ -215,6 +216,10 @@ class WeighingViewModel(
         loadPartnersByTransactionType(type)
     }
 
+    fun setPoDoNumber(number: String) {
+        _uiState.value = _uiState.value.copy(poDoNumber = number.ifBlank { null })
+    }
+
     // === Weighing Operations ===
 
     /**
@@ -254,6 +259,7 @@ class WeighingViewModel(
                                 productId = state.selectedProductId,
                                 partnerId = state.selectedPartnerId,
                                 transactionType = state.selectedTransactionType,
+                                poDoNumber = state.poDoNumber,
                                 isManualMode = state.isManualMode
                         )
                 )

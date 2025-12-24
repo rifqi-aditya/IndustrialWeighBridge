@@ -4,11 +4,6 @@ import com.rifqi.industrialweighbridge.engine.CompletedTransaction
 
 /**
  * Interface for printing service.
- *
- * According to HLD Section 3.3: "Menyediakan layanan pencetakan tiket."
- *
- * And Section 4.2: "Core Weighing Engine mengirimkan perintah pencetakan tiket ke Printer Service
- * melalui Infrastructure Layer."
  */
 interface PrinterService {
 

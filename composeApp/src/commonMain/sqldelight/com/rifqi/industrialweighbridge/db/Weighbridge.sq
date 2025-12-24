@@ -66,6 +66,7 @@ CREATE TABLE WeighingTransaction (
     net_weight REAL,
     status TEXT AS TransactionStatus NOT NULL DEFAULT 'OPEN',
     is_manual INTEGER NOT NULL DEFAULT 0, -- 0=Auto, 1=Manual
+    po_do_number TEXT, -- PO/DO Number (optional)
     transaction_type TEXT AS TransactionType NOT NULL,
 
     FOREIGN KEY (vehicle_id) REFERENCES Vehicle(id),
@@ -179,8 +180,8 @@ ORDER BY T.weigh_in_timestamp DESC;
 insertWeighIn:
 INSERT INTO WeighingTransaction (
     ticket_number, vehicle_id, driver_id, product_id, partner_id, user_id,
-    weigh_in_timestamp, weigh_in_weight, status, is_manual, transaction_type
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'OPEN', ?, ?);
+    weigh_in_timestamp, weigh_in_weight, status, is_manual, transaction_type, po_do_number
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'OPEN', ?, ?, ?);
 
 -- Simpan Weigh Out (Keluar / Update)
 updateWeighOut:

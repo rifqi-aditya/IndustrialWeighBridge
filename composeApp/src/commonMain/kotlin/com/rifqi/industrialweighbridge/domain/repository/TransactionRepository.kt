@@ -21,7 +21,8 @@ interface TransactionRepository {
             partnerId: Long?,
             weight: Double,
             isManual: Boolean,
-            transactionType: TransactionType
+            transactionType: TransactionType,
+            poDoNumber: String? = null
     )
 
     // Proses Weigh Out (Keluar)

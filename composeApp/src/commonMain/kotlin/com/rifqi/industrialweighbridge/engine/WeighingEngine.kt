@@ -133,6 +133,7 @@ class WeighingEngine(
                         selectedProductId = request.productId,
                         selectedPartnerId = request.partnerId,
                         transactionType = request.transactionType,
+                        poDoNumber = request.poDoNumber,
                         currentWeight = _currentWeight.value,
                         isStable = false,
                         isManualMode = request.isManualMode
@@ -225,7 +226,8 @@ class WeighingEngine(
                     partnerId = currentState.selectedPartnerId,
                     weight = weight,
                     isManual = currentState.isManualMode,
-                    transactionType = currentState.transactionType
+                    transactionType = currentState.transactionType,
+                    poDoNumber = currentState.poDoNumber
             )
 
             // Reset to Idle
