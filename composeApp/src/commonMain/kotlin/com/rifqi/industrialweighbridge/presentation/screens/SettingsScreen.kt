@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Print
@@ -46,6 +47,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.rifqi.industrialweighbridge.data.repository.SettingsRepository
 import com.rifqi.industrialweighbridge.domain.model.CompanySettings
 import com.rifqi.industrialweighbridge.domain.model.PaperSize
@@ -62,6 +65,12 @@ fun SettingsScreen() {
     val themeState = LocalThemeState.current
     val settingsRepository: SettingsRepository = koinInject()
     val scrollState = rememberScrollState()
+
+    // Auth state for role-based visibility
+    val authManager = koinInject<AuthenticationManager>()
+    val authState by authManager.authState.collectAsState()
+    val currentUser = (authState as? AuthState.Authenticated)?.user
+    val isAdmin = currentUser?.isAdmin == true
 
     // Company Settings State
     var companySettings by remember { mutableStateOf(CompanySettings()) }
@@ -82,6 +91,41 @@ fun SettingsScreen() {
         selectedPaperSize = print.paperSize
         showLogo = print.showLogo
         footerText = print.footerText
+    }
+
+    // User Management State (Admin Only)
+    var showUserManagement by remember { mutableStateOf(false) }
+
+    // User Management Dialog (Fullscreen)
+    if (showUserManagement) {
+        Dialog(
+            onDismissRequest = { showUserManagement = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Card(
+                modifier = Modifier.fillMaxSize().padding(16.dp),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Kelola Pengguna",
+                            style =
+                                MaterialTheme.typography
+                                    .headlineSmall
+                        )
+                        OutlinedButton(
+                            onClick = { showUserManagement = false }
+                        ) { Text("Tutup") }
+                    }
+                    UserManagementScreen()
+                }
+            }
+        }
     }
 
     // Company Settings Dialog
@@ -137,247 +181,343 @@ fun SettingsScreen() {
             modifier = Modifier.padding(bottom = 24.dp)
         )
 
-        // ==================== COMPANY SETTINGS (Summary Card) ====================
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors =
-                CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
+        // ==================== COMPANY SETTINGS (Admin Only) ====================
+        if (isAdmin) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment =
+                                Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector =
+                                    Icons.Default.Business,
+                                contentDescription = null,
+                                tint =
+                                    MaterialTheme.colorScheme
+                                        .primary
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = "Data Perusahaan",
+                                style =
+                                    MaterialTheme.typography
+                                        .titleMedium,
+                                color =
+                                    MaterialTheme.colorScheme
+                                        .onSurface
+                            )
+                        }
+                        OutlinedButton(
+                            onClick = { showCompanyDialog = true }
+                        ) {
+                            Icon(
+                                Icons.Default.Edit,
+                                contentDescription = null
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Edit")
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Company Info Summary
+                    if (companySettings.companyName.isNotBlank()) {
+                        Text(
+                            text = companySettings.companyName,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        if (companySettings.companyAddress.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text =
+                                    companySettings
+                                        .companyAddress,
+                                style =
+                                    MaterialTheme.typography
+                                        .bodyMedium,
+                                color =
+                                    MaterialTheme.colorScheme
+                                        .onSurfaceVariant
+                            )
+                        }
+                        if (companySettings.companyPhone.isNotBlank() ||
+                            companySettings.companyFax
+                                .isNotBlank()
+                        ) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            val contactInfo = buildString {
+                                if (companySettings.companyPhone
+                                        .isNotBlank()
+                                ) {
+                                    append(
+                                        "Telp: ${companySettings.companyPhone}"
+                                    )
+                                }
+                                if (companySettings.companyFax
+                                        .isNotBlank()
+                                ) {
+                                    if (isNotEmpty())
+                                        append(" | ")
+                                    append(
+                                        "Fax: ${companySettings.companyFax}"
+                                    )
+                                }
+                            }
+                            Text(
+                                text = contactInfo,
+                                style =
+                                    MaterialTheme.typography
+                                        .bodySmall,
+                                color =
+                                    MaterialTheme.colorScheme
+                                        .onSurfaceVariant
+                            )
+                        }
+                        if (companySettings.logoPath != null) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "✓ Logo tersimpan",
+                                style =
+                                    MaterialTheme.typography
+                                        .bodySmall,
+                                color =
+                                    MaterialTheme.colorScheme
+                                        .primary
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = "Belum ada data perusahaan",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color =
+                                MaterialTheme.colorScheme
+                                    .onSurfaceVariant
+                        )
+                        Text(
+                            text =
+                                "Klik Edit untuk menambahkan data perusahaan",
+                            style = MaterialTheme.typography.bodySmall,
+                            color =
+                                MaterialTheme.colorScheme
+                                    .onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ==================== PRINT SETTINGS (Admin Only) ====================
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.Business,
+                            imageVector = Icons.Default.Print,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "Data Perusahaan",
+                            text = "Pengaturan Tiket",
                             style =
                                 MaterialTheme.typography
                                     .titleMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                    OutlinedButton(onClick = { showCompanyDialog = true }) {
-                        Icon(Icons.Default.Edit, contentDescription = null)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Edit")
-                    }
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                // Company Info Summary
-                if (companySettings.companyName.isNotBlank()) {
-                    Text(
-                        text = companySettings.companyName,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    if (companySettings.companyAddress.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = companySettings.companyAddress,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color =
-                                MaterialTheme.colorScheme
-                                    .onSurfaceVariant
-                        )
-                    }
-                    if (companySettings.companyPhone.isNotBlank() ||
-                        companySettings.companyFax.isNotBlank()
+                    // Paper Size Dropdown
+                    ExposedDropdownMenuBox(
+                        expanded = paperSizeExpanded,
+                        onExpandedChange = {
+                            paperSizeExpanded = !paperSizeExpanded
+                        }
                     ) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        val contactInfo = buildString {
-                            if (companySettings.companyPhone
-                                    .isNotBlank()
-                            ) {
-                                append(
-                                    "Telp: ${companySettings.companyPhone}"
-                                )
+                        OutlinedTextField(
+                            value = selectedPaperSize.displayName,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Ukuran Kertas") },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults
+                                    .TrailingIcon(
+                                        expanded =
+                                            paperSizeExpanded
+                                    )
+                            },
+                            modifier =
+                                Modifier.fillMaxWidth().menuAnchor()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = paperSizeExpanded,
+                            onDismissRequest = {
+                                paperSizeExpanded = false
                             }
-                            if (companySettings.companyFax.isNotBlank()
-                            ) {
-                                if (isNotEmpty()) append(" | ")
-                                append(
-                                    "Fax: ${companySettings.companyFax}"
+                        ) {
+                            PaperSize.entries.forEach { size ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            size.displayName
+                                        )
+                                    },
+                                    onClick = {
+                                        selectedPaperSize =
+                                            size
+                                        paperSizeExpanded =
+                                            false
+                                        printSaved = false
+                                    }
                                 )
                             }
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Show Logo Toggle
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
                         Text(
-                            text = contactInfo,
-                            style = MaterialTheme.typography.bodySmall,
-                            color =
-                                MaterialTheme.colorScheme
-                                    .onSurfaceVariant
+                            text = "Tampilkan Logo",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Switch(
+                            checked = showLogo,
+                            onCheckedChange = {
+                                showLogo = it
+                                printSaved = false
+                            }
                         )
                     }
-                    if (companySettings.logoPath != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "✓ Logo tersimpan",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                } else {
-                    Text(
-                        text = "Belum ada data perusahaan",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text =
-                            "Klik Edit untuk menambahkan data perusahaan",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-        // ==================== PRINT SETTINGS ====================
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors =
-                CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Print,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "Pengaturan Tiket",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Paper Size Dropdown
-                ExposedDropdownMenuBox(
-                    expanded = paperSizeExpanded,
-                    onExpandedChange = {
-                        paperSizeExpanded = !paperSizeExpanded
-                    }
-                ) {
                     OutlinedTextField(
-                        value = selectedPaperSize.displayName,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Ukuran Kertas") },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded = paperSizeExpanded
+                        value = footerText,
+                        onValueChange = {
+                            footerText = it
+                            printSaved = false
+                        },
+                        label = { Text("Footer Tiket") },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = {
+                            Text(
+                                "Contoh: Terima kasih telah menggunakan jasa kami"
                             )
                         },
-                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                        singleLine = true
                     )
-                    ExposedDropdownMenu(
-                        expanded = paperSizeExpanded,
-                        onDismissRequest = { paperSizeExpanded = false }
-                    ) {
-                        PaperSize.entries.forEach { size ->
-                            DropdownMenuItem(
-                                text = { Text(size.displayName) },
-                                onClick = {
-                                    selectedPaperSize = size
-                                    paperSizeExpanded = false
-                                    printSaved = false
-                                }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = {
+                            settingsRepository.savePrintSettings(
+                                PrintSettings(
+                                    paperSize =
+                                        selectedPaperSize,
+                                    showLogo = showLogo,
+                                    footerText = footerText
+                                )
                             )
-                        }
+                            printSaved = true
+                        },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Icon(Icons.Default.Save, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            if (printSaved) "Tersimpan ✓"
+                            else "Simpan Pengaturan Tiket"
+                        )
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-                // Show Logo Toggle
+            // ==================== USER MANAGEMENT (Admin Only) ====================
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = "Tampilkan Logo",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Switch(
-                        checked = showLogo,
-                        onCheckedChange = {
-                            showLogo = it
-                            printSaved = false
-                        }
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = footerText,
-                    onValueChange = {
-                        footerText = it
-                        printSaved = false
-                    },
-                    label = { Text("Footer Tiket") },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = {
-                        Text(
-                            "Contoh: Terima kasih telah menggunakan jasa kami"
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Group,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
                         )
-                    },
-                    singleLine = true
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
-                    onClick = {
-                        settingsRepository.savePrintSettings(
-                            PrintSettings(
-                                paperSize = selectedPaperSize,
-                                showLogo = showLogo,
-                                footerText = footerText
+                        Column(modifier = Modifier.padding(start = 16.dp)) {
+                            Text(
+                                text = "Kelola Pengguna",
+                                style =
+                                    MaterialTheme.typography
+                                        .titleMedium,
+                                color =
+                                    MaterialTheme.colorScheme
+                                        .onSurface
                             )
-                        )
-                        printSaved = true
-                    },
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Icon(Icons.Default.Save, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        if (printSaved) "Tersimpan ✓"
-                        else "Simpan Pengaturan Tiket"
-                    )
+                            Text(
+                                text = "Tambah atau hapus pengguna",
+                                style =
+                                    MaterialTheme.typography
+                                        .bodySmall,
+                                color =
+                                    MaterialTheme.colorScheme
+                                        .onSurfaceVariant
+                            )
+                        }
+                    }
+                    OutlinedButton(onClick = { showUserManagement = true }) {
+                        Text("Kelola")
+                    }
                 }
             }
-        }
+        } // End isAdmin block
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // ==================== THEME TOGGLE ====================
+        // ==================== THEME TOGGLE (All Users) ====================
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),

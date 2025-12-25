@@ -95,6 +95,18 @@ INSERT INTO User (username, password_hash, role) VALUES (?, ?, ?);
 selectUserById:
 SELECT * FROM User WHERE id = ?;
 
+selectAllUsers:
+SELECT id, username, role, created_at FROM User ORDER BY id ASC;
+
+updateUserPassword:
+UPDATE User SET password_hash = ? WHERE id = ?;
+
+updateUserRole:
+UPDATE User SET role = ? WHERE id = ?;
+
+deleteUser:
+DELETE FROM User WHERE id = ?;
+
 -- B. MASTER DATA Queries
 -- Vehicle
 selectAllVehicles:

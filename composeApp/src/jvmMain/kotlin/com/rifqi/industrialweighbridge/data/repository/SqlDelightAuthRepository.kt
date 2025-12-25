@@ -47,4 +47,40 @@ class SqlDelightAuthRepository(private val db: WeighbridgeDatabase) : AuthReposi
         val dbUser = queries.selectUserById(id).executeAsOneOrNull() ?: return null
         return User(id = dbUser.id, username = dbUser.username, role = dbUser.role)
     }
+
+    // === User Management ===
+
+    override suspend fun getAllUsers(): List<User> {
+        return queries.selectAllUsers().executeAsList().map { dbUser ->
+            User(id = dbUser.id, username = dbUser.username, role = dbUser.role)
+        }
+    }
+
+    override suspend fun updateUserPassword(userId: Long, newPassword: String): Boolean {
+        return try {
+            val hashedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt(12))
+            queries.updateUserPassword(password_hash = hashedPassword, id = userId)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    override suspend fun updateUserRole(userId: Long, newRole: UserRole): Boolean {
+        return try {
+            queries.updateUserRole(role = newRole, id = userId)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    override suspend fun deleteUser(userId: Long): Boolean {
+        return try {
+            queries.deleteUser(id = userId)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
 }

@@ -3,10 +3,7 @@ package com.rifqi.industrialweighbridge.domain.repository
 import com.rifqi.industrialweighbridge.db.UserRole
 import com.rifqi.industrialweighbridge.domain.model.User
 
-/**
- * Repository interface for authentication operations. Follows the repository pattern for clean
- * architecture.
- */
+/** Repository interface for authentication and user management operations. */
 interface AuthRepository {
     /**
      * Authenticates a user with username and password.
@@ -25,4 +22,18 @@ interface AuthRepository {
 
     /** Gets a user by their ID. */
     suspend fun getUserById(id: Long): User?
+
+    // === User Management (Admin Only) ===
+
+    /** Gets all users. */
+    suspend fun getAllUsers(): List<User>
+
+    /** Updates user password. */
+    suspend fun updateUserPassword(userId: Long, newPassword: String): Boolean
+
+    /** Updates user role. */
+    suspend fun updateUserRole(userId: Long, newRole: UserRole): Boolean
+
+    /** Deletes a user. */
+    suspend fun deleteUser(userId: Long): Boolean
 }
