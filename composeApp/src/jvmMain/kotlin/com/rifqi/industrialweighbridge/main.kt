@@ -30,26 +30,26 @@ fun main() = application {
 
     // 3. Tampilkan Jendela Aplikasi dengan Custom Title Bar
     Window(
-            onCloseRequest = ::exitApplication,
-            title = "Industrial WeighBridge System",
-            state = windowState,
-            undecorated = true, // Hilangkan title bar default Windows
-            resizable = true
+        onCloseRequest = ::exitApplication,
+        title = "Industrial WeighBridge System",
+        state = windowState,
+        undecorated = true, // Hilangkan title bar default Windows
+        resizable = true
     ) {
         WeighBridgeTheme {
             Column(modifier = Modifier.fillMaxSize()) {
                 // Custom Title Bar
                 WindowTitleBar(
-                        window = window,
-                        onMinimize = { window.isMinimized = true },
-                        onMaximize = {
-                            if (window.extendedState == Frame.MAXIMIZED_BOTH) {
-                                window.extendedState = Frame.NORMAL
-                            } else {
-                                window.extendedState = Frame.MAXIMIZED_BOTH
-                            }
-                        },
-                        onClose = ::exitApplication
+                    window = window,
+                    onMinimize = { window.isMinimized = true },
+                    onMaximize = {
+                        if (window.extendedState == Frame.MAXIMIZED_BOTH) {
+                            window.extendedState = Frame.NORMAL
+                        } else {
+                            window.extendedState = Frame.MAXIMIZED_BOTH
+                        }
+                    },
+                    onClose = ::exitApplication
                 )
 
                 // Main Content
@@ -62,9 +62,10 @@ fun main() = application {
 fun initKoin() {
     startKoin {
         modules(
-                appModule, // Repository, Use Cases, ViewModels & Engine
-                databaseModule, // SqlDriver & Database Setup
-                jvmModule // JVM-specific: Serial Port, Printer
+            databaseModule, // SqlDriver & Database Setup (required first)
+            jvmModule, // JVM-specific: Serial Port, Printer, AuditLogger (required by
+            // appModule)
+            appModule // Repository, Use Cases, ViewModels & Engine (depends on above)
         )
     }
 }

@@ -12,11 +12,11 @@ import kotlinx.coroutines.launch
 
 /** UI State for Login Screen */
 data class LoginUiState(
-        val username: String = "",
-        val password: String = "",
-        val isLoading: Boolean = false,
-        val errorMessage: String? = null,
-        val isPasswordVisible: Boolean = false
+    val username: String = "",
+    val password: String = "",
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
+    val isPasswordVisible: Boolean = false
 )
 
 /**
@@ -61,17 +61,17 @@ class LoginViewModel(private val authenticationManager: AuthenticationManager) {
             _uiState.value = currentState.copy(isLoading = true, errorMessage = null)
 
             val success =
-                    authenticationManager.login(
-                            username = currentState.username,
-                            password = currentState.password
-                    )
+                authenticationManager.login(
+                    username = currentState.username,
+                    password = currentState.password
+                )
 
             if (!success) {
                 _uiState.value =
-                        _uiState.value.copy(
-                                isLoading = false,
-                                errorMessage = "Username atau password salah"
-                        )
+                    _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "Username atau password salah"
+                    )
             } else {
                 // Reset form on success
                 _uiState.value = LoginUiState()

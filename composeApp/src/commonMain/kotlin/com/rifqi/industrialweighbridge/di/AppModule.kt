@@ -35,8 +35,7 @@ import com.rifqi.industrialweighbridge.domain.usecase.vehicle.UpdateVehicleUseCa
 import com.rifqi.industrialweighbridge.engine.AuthenticationManager
 import com.rifqi.industrialweighbridge.engine.StabilityConfig
 import com.rifqi.industrialweighbridge.engine.WeighingEngine
-import com.rifqi.industrialweighbridge.infrastructure.AuditLogger
-import com.rifqi.industrialweighbridge.infrastructure.InMemoryAuditLogger
+import com.rifqi.industrialweighbridge.presentation.viewmodel.AuditLogViewModel
 import com.rifqi.industrialweighbridge.presentation.viewmodel.DashboardViewModel
 import com.rifqi.industrialweighbridge.presentation.viewmodel.DriverViewModel
 import com.rifqi.industrialweighbridge.presentation.viewmodel.LoginViewModel
@@ -70,18 +69,26 @@ val appModule = module {
     single { StabilityConfig(windowSize = 5, toleranceKg = 2.0, minimumWeightKg = 50.0) }
 
     // Core Weighing Engine - Single source of truth for weighing operations
-    single { WeighingEngine(transactionRepository = get(), stabilityConfig = get()) }
+    single {
+        WeighingEngine(
+            transactionRepository = get(),
+            stabilityConfig = get(),
+            auditLogger = get(),
+            getCurrentUsername = {
+                get<AuthenticationManager>().currentUser?.username ?: "system"
+            }
+        )
+    }
 
     // === NEW: Infrastructure Layer (HLD Section 3.3) ===
 
-    // Audit Logger
-    single<AuditLogger> { InMemoryAuditLogger() }
+    // Audit Logger - registered in jvmModule.kt (uses SQLite)
 
     // === Authentication ===
     // Note: AuthRepository is registered in jvmModule.kt (requires BCrypt)
 
     // Authentication Manager - Session and login state management
-    single { AuthenticationManager(authRepository = get()) }
+    single { AuthenticationManager(authRepository = get(), auditLogger = get()) }
 
     // Login ViewModel
     factory { LoginViewModel(authenticationManager = get()) }
@@ -120,10 +127,54 @@ val appModule = module {
     // Note: CreateWeighInUseCase and UpdateWeighOutUseCase are replaced by WeighingEngine
 
     // --- ViewModels ---
-    factory { DriverViewModel(get(), get(), get(), get()) }
-    factory { VehicleViewModel(get(), get(), get(), get()) }
-    factory { ProductViewModel(get(), get(), get(), get()) }
-    factory { PartnerViewModel(get(), get(), get(), get()) }
+    factory {
+        DriverViewModel(
+            getAllDrivers = get(),
+            addDriver = get(),
+            updateDriver = get(),
+            deleteDriver = get(),
+            auditLogger = get(),
+            getCurrentUsername = {
+                get<AuthenticationManager>().currentUser?.username ?: "system"
+            }
+        )
+    }
+    factory {
+        VehicleViewModel(
+            getAllVehicles = get(),
+            addVehicle = get(),
+            updateVehicle = get(),
+            deleteVehicle = get(),
+            auditLogger = get(),
+            getCurrentUsername = {
+                get<AuthenticationManager>().currentUser?.username ?: "system"
+            }
+        )
+    }
+    factory {
+        ProductViewModel(
+            getAllProducts = get(),
+            addProduct = get(),
+            updateProduct = get(),
+            deleteProduct = get(),
+            auditLogger = get(),
+            getCurrentUsername = {
+                get<AuthenticationManager>().currentUser?.username ?: "system"
+            }
+        )
+    }
+    factory {
+        PartnerViewModel(
+            getAllPartners = get(),
+            addPartner = get(),
+            updatePartner = get(),
+            deletePartner = get(),
+            auditLogger = get(),
+            getCurrentUsername = {
+                get<AuthenticationManager>().currentUser?.username ?: "system"
+            }
+        )
+    }
     // WeighingViewModel now uses WeighingEngine as single source of truth
     factory {
         WeighingViewModel(
@@ -137,4 +188,7 @@ val appModule = module {
         )
     }
     factory { DashboardViewModel(get(), get(), get(), get(), get()) }
+
+    // Audit Log ViewModel
+    factory { AuditLogViewModel(get()) }
 }

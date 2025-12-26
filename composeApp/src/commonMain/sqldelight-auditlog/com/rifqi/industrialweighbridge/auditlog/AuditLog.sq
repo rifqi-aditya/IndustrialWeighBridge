@@ -1,0 +1,70 @@
+-- AuditLog.sq
+-- Separate database for action logging
+
+-- Create ActionLog table
+CREATE TABLE ActionLog (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,
+    action TEXT NOT NULL,
+    username TEXT NOT NULL,
+    entity_type TEXT,
+    entity_id TEXT,
+    description TEXT NOT NULL,
+    details TEXT
+);
+
+-- Indexes for efficient querying
+CREATE INDEX idx_action_log_timestamp ON ActionLog(timestamp);
+CREATE INDEX idx_action_log_action ON ActionLog(action);
+CREATE INDEX idx_action_log_username ON ActionLog(username);
+
+-- ==========================================
+-- QUERIES
+-- ==========================================
+
+-- Insert new log entry
+insertLog:
+INSERT INTO ActionLog (timestamp, action, username, entity_type, entity_id, description, details)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+-- Get all logs (newest first)
+selectAllLogs:
+SELECT * FROM ActionLog ORDER BY timestamp DESC;
+
+-- Get logs by date range
+selectLogsByDateRange:
+SELECT * FROM ActionLog 
+WHERE timestamp >= ? AND timestamp <= ?
+ORDER BY timestamp DESC;
+
+-- Get logs by action type
+selectLogsByAction:
+SELECT * FROM ActionLog 
+WHERE action = ?
+ORDER BY timestamp DESC;
+
+-- Get logs by username
+selectLogsByUsername:
+SELECT * FROM ActionLog 
+WHERE username = ?
+ORDER BY timestamp DESC;
+
+-- Get logs with pagination (for performance)
+selectLogsPaginated:
+SELECT * FROM ActionLog 
+ORDER BY timestamp DESC
+LIMIT ? OFFSET ?;
+
+-- Count total logs
+countLogs:
+SELECT COUNT(*) FROM ActionLog;
+
+-- Delete logs older than a specific date (for retention policy)
+deleteLogsOlderThan:
+DELETE FROM ActionLog WHERE timestamp < ?;
+
+-- Get recent logs (last N entries)
+selectRecentLogs:
+SELECT * FROM ActionLog 
+ORDER BY timestamp DESC
+LIMIT ?;

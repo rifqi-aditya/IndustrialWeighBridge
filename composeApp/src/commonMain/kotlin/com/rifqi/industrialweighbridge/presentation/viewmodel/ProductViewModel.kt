@@ -5,6 +5,9 @@ import com.rifqi.industrialweighbridge.domain.usecase.product.AddProductUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.product.DeleteProductUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.product.GetAllProductsUseCase
 import com.rifqi.industrialweighbridge.domain.usecase.product.UpdateProductUseCase
+import com.rifqi.industrialweighbridge.infrastructure.AuditAction
+import com.rifqi.industrialweighbridge.infrastructure.AuditLogger
+import com.rifqi.industrialweighbridge.infrastructure.EntityType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -14,17 +17,19 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class ProductUiState(
-        val products: List<Product> = emptyList(),
-        val isLoading: Boolean = true,
-        val searchQuery: String = "",
-        val errorMessage: String? = null
+    val products: List<Product> = emptyList(),
+    val isLoading: Boolean = true,
+    val searchQuery: String = "",
+    val errorMessage: String? = null
 )
 
 class ProductViewModel(
-        private val getAllProducts: GetAllProductsUseCase,
-        private val addProduct: AddProductUseCase,
-        private val updateProduct: UpdateProductUseCase,
-        private val deleteProduct: DeleteProductUseCase
+    private val getAllProducts: GetAllProductsUseCase,
+    private val addProduct: AddProductUseCase,
+    private val updateProduct: UpdateProductUseCase,
+    private val deleteProduct: DeleteProductUseCase,
+    private val auditLogger: AuditLogger,
+    private val getCurrentUsername: () -> String
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
@@ -64,6 +69,16 @@ class ProductViewModel(
             try {
                 addProduct(name, code)
                 _uiState.value = _uiState.value.copy(errorMessage = null)
+
+                // Log the action
+                auditLogger.log(
+                    action = AuditAction.PRODUCT_CREATED,
+                    username = getCurrentUsername(),
+                    description = "Produk ditambahkan: $name",
+                    entityType = EntityType.PRODUCT.name,
+                    entityId = name,
+                    details = code?.let { "Code: $it" }
+                )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(errorMessage = e.message)
             }
@@ -75,6 +90,16 @@ class ProductViewModel(
             try {
                 updateProduct(id, name, code)
                 _uiState.value = _uiState.value.copy(errorMessage = null)
+
+                // Log the action
+                auditLogger.log(
+                    action = AuditAction.PRODUCT_UPDATED,
+                    username = getCurrentUsername(),
+                    description = "Produk diperbarui: $name",
+                    entityType = EntityType.PRODUCT.name,
+                    entityId = id.toString(),
+                    details = "Name: $name, Code: ${code ?: "-"}"
+                )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(errorMessage = e.message)
             }
@@ -84,8 +109,21 @@ class ProductViewModel(
     fun delete(id: Long) {
         scope.launch {
             try {
+                // Get product name before deletion for logging
+                val productToDelete = _uiState.value.products.find { it.id == id }
+
                 deleteProduct(id)
                 _uiState.value = _uiState.value.copy(errorMessage = null)
+
+                // Log the action
+                auditLogger.log(
+                    action = AuditAction.PRODUCT_DELETED,
+                    username = getCurrentUsername(),
+                    description = "Produk dihapus: ${productToDelete?.name ?: "ID $id"}",
+                    entityType = EntityType.PRODUCT.name,
+                    entityId = id.toString(),
+                    details = null
+                )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(errorMessage = e.message)
             }

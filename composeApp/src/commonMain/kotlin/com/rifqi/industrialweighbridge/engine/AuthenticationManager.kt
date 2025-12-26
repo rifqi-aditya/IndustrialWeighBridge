@@ -3,6 +3,9 @@ package com.rifqi.industrialweighbridge.engine
 import com.rifqi.industrialweighbridge.db.UserRole
 import com.rifqi.industrialweighbridge.domain.model.User
 import com.rifqi.industrialweighbridge.domain.repository.AuthRepository
+import com.rifqi.industrialweighbridge.infrastructure.AuditAction
+import com.rifqi.industrialweighbridge.infrastructure.AuditLogger
+import com.rifqi.industrialweighbridge.infrastructure.EntityType
 import com.russhwolf.settings.Settings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,8 +31,12 @@ sealed class AuthState {
  * - Persist session using multiplatform-settings
  * - Provide authentication state to the app
  * - Auto-create default admin user on first run
+ * - Log authentication events for audit trail
  */
-class AuthenticationManager(private val authRepository: AuthRepository) {
+class AuthenticationManager(
+        private val authRepository: AuthRepository,
+        private val auditLogger: AuditLogger
+) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val settings: Settings = Settings()
 
@@ -94,24 +101,67 @@ class AuthenticationManager(private val authRepository: AuthRepository) {
                 settings.putBoolean(KEY_IS_LOGGED_IN, true)
 
                 _authState.value = AuthState.Authenticated(user)
+
+                // Log successful login
+                println("[DEBUG] About to log LOGIN action for user: ${user.username}")
+                auditLogger.log(
+                        action = AuditAction.LOGIN,
+                        username = user.username,
+                        description = "User '${user.username}' logged in successfully",
+                        entityType = EntityType.USER.name,
+                        entityId = user.id.toString()
+                )
+                println("[DEBUG] LOGIN action logged successfully")
+
                 true
             } else {
                 _authState.value = AuthState.Error("Username atau password salah")
+
+                // Log failed login attempt
+                auditLogger.log(
+                        action = AuditAction.LOGIN_FAILED,
+                        username = username,
+                        description = "Failed login attempt for username '$username'"
+                )
+
                 false
             }
         } catch (e: Exception) {
             _authState.value = AuthState.Error("Login gagal: ${e.message}")
+
+            // Log failed login with error
+            auditLogger.log(
+                    action = AuditAction.LOGIN_FAILED,
+                    username = username,
+                    description = "Login error for '$username': ${e.message}"
+            )
+
             false
         }
     }
 
     /** Logout current user. */
     fun logout() {
+        val logoutUser = currentUser
+
         // Clear session
         settings.remove(KEY_USER_ID)
         settings.putBoolean(KEY_IS_LOGGED_IN, false)
 
         _authState.value = AuthState.NotAuthenticated
+
+        // Log logout event
+        logoutUser?.let { user ->
+            scope.launch {
+                auditLogger.log(
+                        action = AuditAction.LOGOUT,
+                        username = user.username,
+                        description = "User '${user.username}' logged out",
+                        entityType = EntityType.USER.name,
+                        entityId = user.id.toString()
+                )
+            }
+        }
     }
 
     /** Clear error state. */

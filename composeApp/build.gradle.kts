@@ -65,6 +65,9 @@ kotlin {
 
             // Date/Time (must be in jvmMain for runtime)
             implementation(libs.kotlinx.datetime)
+            
+            // Ensure kotlinx-datetime is actually bundled (explicit dependency)
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
 
             // --- NEW: Desktop Specific Drivers ---
 
@@ -87,9 +90,15 @@ kotlin {
 // --- Konfigurasi SQLDelight (Generate Database Code) ---
 sqldelight {
     databases {
-        // Gunakan 'register' (bukan 'create') untuk menghindari error tipe inferensi
+        // Main database for weighbridge operations
         register("WeighbridgeDatabase") {
             packageName.set("com.rifqi.industrialweighbridge.db")
+            srcDirs.setFrom("src/commonMain/sqldelight")
+        }
+        // Separate database for audit logging (to not impact main DB performance)
+        register("AuditLogDatabase") {
+            packageName.set("com.rifqi.industrialweighbridge.auditlog")
+            srcDirs.setFrom("src/commonMain/sqldelight-auditlog")
         }
     }
 }

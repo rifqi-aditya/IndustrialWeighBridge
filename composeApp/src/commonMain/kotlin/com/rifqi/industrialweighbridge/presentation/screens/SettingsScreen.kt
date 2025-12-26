@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Print
@@ -96,14 +98,18 @@ fun SettingsScreen() {
     // User Management State (Admin Only)
     var showUserManagement by remember { mutableStateOf(false) }
 
-    // User Management Dialog (Fullscreen)
+    // Audit Log State (Admin Only)
+    var showAuditLog by remember { mutableStateOf(false) }
+
+    // User Management Dialog (Fullscreen but leaves space for title bar)
     if (showUserManagement) {
         Dialog(
             onDismissRequest = { showUserManagement = false },
             properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
             Card(
-                modifier = Modifier.fillMaxSize().padding(16.dp),
+                modifier =
+                    Modifier.fillMaxWidth().fillMaxHeight(0.92f).padding(16.dp),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column {
@@ -125,6 +131,20 @@ fun SettingsScreen() {
                     UserManagementScreen()
                 }
             }
+        }
+    }
+
+    // Audit Log Dialog (Fullscreen but leaves space for title bar)
+    if (showAuditLog) {
+        Dialog(
+            onDismissRequest = { showAuditLog = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Card(
+                modifier =
+                    Modifier.fillMaxWidth().fillMaxHeight(0.92f).padding(16.dp),
+                shape = RoundedCornerShape(16.dp)
+            ) { AuditLogScreen(onBack = { showAuditLog = false }) }
         }
     }
 
@@ -510,6 +530,57 @@ fun SettingsScreen() {
                     }
                     OutlinedButton(onClick = { showUserManagement = true }) {
                         Text("Kelola")
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ==================== AUDIT LOG (Admin Only) ====================
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Column(modifier = Modifier.padding(start = 16.dp)) {
+                            Text(
+                                text = "Audit Log",
+                                style =
+                                    MaterialTheme.typography
+                                        .titleMedium,
+                                color =
+                                    MaterialTheme.colorScheme
+                                        .onSurface
+                            )
+                            Text(
+                                text =
+                                    "Lihat riwayat aktivitas sistem",
+                                style =
+                                    MaterialTheme.typography
+                                        .bodySmall,
+                                color =
+                                    MaterialTheme.colorScheme
+                                        .onSurfaceVariant
+                            )
+                        }
+                    }
+                    OutlinedButton(onClick = { showAuditLog = true }) {
+                        Text("Lihat")
                     }
                 }
             }

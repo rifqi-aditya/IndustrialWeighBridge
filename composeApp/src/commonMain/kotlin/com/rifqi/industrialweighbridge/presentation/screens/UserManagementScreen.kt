@@ -49,6 +49,10 @@ import androidx.compose.ui.unit.dp
 import com.rifqi.industrialweighbridge.db.UserRole
 import com.rifqi.industrialweighbridge.domain.model.User
 import com.rifqi.industrialweighbridge.domain.repository.AuthRepository
+import com.rifqi.industrialweighbridge.engine.AuthenticationManager
+import com.rifqi.industrialweighbridge.infrastructure.AuditAction
+import com.rifqi.industrialweighbridge.infrastructure.AuditLogger
+import com.rifqi.industrialweighbridge.infrastructure.EntityType
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -57,7 +61,10 @@ import org.koin.compose.koinInject
 @Composable
 fun UserManagementScreen() {
     val authRepository = koinInject<AuthRepository>()
+    val auditLogger = koinInject<AuditLogger>()
+    val authManager = koinInject<AuthenticationManager>()
     val scope = rememberCoroutineScope()
+    val currentUsername = authManager.currentUser?.username ?: "system"
 
     var users by remember { mutableStateOf<List<User>>(emptyList()) }
     var showAddDialog by remember { mutableStateOf(false) }
@@ -70,73 +77,92 @@ fun UserManagementScreen() {
     // Add User Dialog
     if (showAddDialog) {
         AddUserDialog(
-                onDismiss = { showAddDialog = false },
-                onConfirm = { username, password, role ->
-                    scope.launch {
-                        val success = authRepository.createUser(username, password, role)
-                        if (success) {
-                            users = authRepository.getAllUsers()
-                            showAddDialog = false
-                            errorMessage = null
-                        } else {
-                            errorMessage = "Username sudah ada"
-                        }
+            onDismiss = { showAddDialog = false },
+            onConfirm = { username, password, role ->
+                scope.launch {
+                    val success = authRepository.createUser(username, password, role)
+                    if (success) {
+                        users = authRepository.getAllUsers()
+                        showAddDialog = false
+                        errorMessage = null
+                        // Log the action
+                        auditLogger.log(
+                            action = AuditAction.USER_CREATED,
+                            username = currentUsername,
+                            description = "User dibuat: $username (${role.name})",
+                            entityType = EntityType.USER.name,
+                            entityId = username,
+                            details = "Role: ${role.name}"
+                        )
+                    } else {
+                        errorMessage = "Username sudah ada"
                     }
-                },
-                errorMessage = errorMessage
+                }
+            },
+            errorMessage = errorMessage
         )
     }
 
     // Delete Confirmation Dialog
     showDeleteDialog?.let { userToDelete ->
         AlertDialog(
-                onDismissRequest = { showDeleteDialog = null },
-                title = { Text("Hapus Pengguna") },
-                text = {
-                    Text("Apakah Anda yakin ingin menghapus pengguna '${userToDelete.username}'?")
-                },
-                confirmButton = {
-                    Button(
-                            onClick = {
-                                scope.launch {
-                                    authRepository.deleteUser(userToDelete.id)
-                                    users = authRepository.getAllUsers()
-                                    showDeleteDialog = null
-                                }
-                            },
-                            colors =
-                                    ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.error
-                                    )
-                    ) { Text("Hapus") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDeleteDialog = null }) { Text("Batal") }
-                }
+            onDismissRequest = { showDeleteDialog = null },
+            title = { Text("Hapus Pengguna") },
+            text = {
+                Text("Apakah Anda yakin ingin menghapus pengguna '${userToDelete.username}'?")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        scope.launch {
+                            val deletedUsername = userToDelete.username
+                            authRepository.deleteUser(userToDelete.id)
+                            users = authRepository.getAllUsers()
+                            showDeleteDialog = null
+                            // Log the action
+                            auditLogger.log(
+                                action = AuditAction.USER_DELETED,
+                                username = currentUsername,
+                                description = "User dihapus: $deletedUsername",
+                                entityType = EntityType.USER.name,
+                                entityId = userToDelete.id.toString(),
+                                details = null
+                            )
+                        }
+                    },
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
+                ) { Text("Hapus") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = null }) { Text("Batal") }
+            }
         )
     }
 
     Scaffold(
-            floatingActionButton = {
-                FloatingActionButton(
-                        onClick = { showAddDialog = true },
-                        containerColor = MaterialTheme.colorScheme.primary
-                ) { Icon(Icons.Default.Add, contentDescription = "Tambah Pengguna") }
-            }
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showAddDialog = true },
+                containerColor = MaterialTheme.colorScheme.primary
+            ) { Icon(Icons.Default.Add, contentDescription = "Tambah Pengguna") }
+        }
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp)) {
             Text(
-                    text = "Kelola Pengguna",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(bottom = 24.dp)
+                text = "Kelola Pengguna",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(bottom = 24.dp)
             )
 
             if (users.isEmpty()) {
                 Text(
-                        text = "Belum ada pengguna",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "Belum ada pengguna",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -152,34 +178,34 @@ fun UserManagementScreen() {
 @Composable
 private fun UserCard(user: User, onDelete: () -> Unit) {
     Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
                 )
                 Column(modifier = Modifier.padding(start = 16.dp)) {
                     Text(
-                            text = user.username,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
+                        text = user.username,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                            text = user.role.name,
-                            style = MaterialTheme.typography.bodySmall,
-                            color =
-                                    if (user.isAdmin) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.onSurfaceVariant
+                        text = user.role.name,
+                        style = MaterialTheme.typography.bodySmall,
+                        color =
+                            if (user.isAdmin) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -188,9 +214,9 @@ private fun UserCard(user: User, onDelete: () -> Unit) {
             if (user.id != 1L) {
                 IconButton(onClick = onDelete) {
                     Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Hapus",
-                            tint = MaterialTheme.colorScheme.error
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Hapus",
+                        tint = MaterialTheme.colorScheme.error
                     )
                 }
             }
@@ -201,9 +227,9 @@ private fun UserCard(user: User, onDelete: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddUserDialog(
-        onDismiss: () -> Unit,
-        onConfirm: (username: String, password: String, role: UserRole) -> Unit,
-        errorMessage: String?
+    onDismiss: () -> Unit,
+    onConfirm: (username: String, password: String, role: UserRole) -> Unit,
+    errorMessage: String?
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -214,115 +240,115 @@ private fun AddUserDialog(
     var localError by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(
-            onDismissRequest = onDismiss,
-            title = { Text("Tambah Pengguna Baru") },
-            text = {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    OutlinedTextField(
-                            value = username,
-                            onValueChange = { username = it },
-                            label = { Text("Username") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                    )
+        onDismissRequest = onDismiss,
+        title = { Text("Tambah Pengguna Baru") },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    label = { Text("Username") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                    OutlinedTextField(
-                            value = password,
-                            onValueChange = { password = it },
-                            label = { Text("Password") },
-                            singleLine = true,
-                            visualTransformation =
-                                    if (passwordVisible) VisualTransformation.None
-                                    else PasswordVisualTransformation(),
-                            trailingIcon = {
-                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                    Icon(
-                                            imageVector =
-                                                    if (passwordVisible) Icons.Default.VisibilityOff
-                                                    else Icons.Default.Visibility,
-                                            contentDescription = null
-                                    )
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    OutlinedTextField(
-                            value = confirmPassword,
-                            onValueChange = { confirmPassword = it },
-                            label = { Text("Konfirmasi Password") },
-                            singleLine = true,
-                            visualTransformation = PasswordVisualTransformation(),
-                            modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Role Dropdown
-                    ExposedDropdownMenuBox(
-                            expanded = roleExpanded,
-                            onExpandedChange = { roleExpanded = !roleExpanded }
-                    ) {
-                        OutlinedTextField(
-                                value = selectedRole.name,
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text("Role") },
-                                trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(
-                                            expanded = roleExpanded
-                                    )
-                                },
-                                modifier = Modifier.fillMaxWidth().menuAnchor()
-                        )
-                        ExposedDropdownMenu(
-                                expanded = roleExpanded,
-                                onDismissRequest = { roleExpanded = false }
-                        ) {
-                            UserRole.entries.forEach { role ->
-                                DropdownMenuItem(
-                                        text = { Text(role.name) },
-                                        onClick = {
-                                            selectedRole = role
-                                            roleExpanded = false
-                                        }
-                                )
-                            }
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Password") },
+                    singleLine = true,
+                    visualTransformation =
+                        if (passwordVisible) VisualTransformation.None
+                        else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                imageVector =
+                                    if (passwordVisible) Icons.Default.VisibilityOff
+                                    else Icons.Default.Visibility,
+                                contentDescription = null
+                            )
                         }
-                    }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-                    // Error messages
-                    val displayError = localError ?: errorMessage
-                    if (displayError != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                                text = displayError,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall
-                        )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    label = { Text("Konfirmasi Password") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Role Dropdown
+                ExposedDropdownMenuBox(
+                    expanded = roleExpanded,
+                    onExpandedChange = { roleExpanded = !roleExpanded }
+                ) {
+                    OutlinedTextField(
+                        value = selectedRole.name,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Role") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = roleExpanded
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = roleExpanded,
+                        onDismissRequest = { roleExpanded = false }
+                    ) {
+                        UserRole.entries.forEach { role ->
+                            DropdownMenuItem(
+                                text = { Text(role.name) },
+                                onClick = {
+                                    selectedRole = role
+                                    roleExpanded = false
+                                }
+                            )
+                        }
                     }
                 }
-            },
-            confirmButton = {
-                Button(
-                        onClick = {
-                            // Validate
-                            when {
-                                username.isBlank() -> localError = "Username tidak boleh kosong"
-                                password.length < 6 -> localError = "Password minimal 6 karakter"
-                                password != confirmPassword -> localError = "Password tidak sama"
-                                else -> {
-                                    localError = null
-                                    onConfirm(username, password, selectedRole)
-                                }
-                            }
+
+                // Error messages
+                val displayError = localError ?: errorMessage
+                if (displayError != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = displayError,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    // Validate
+                    when {
+                        username.isBlank() -> localError = "Username tidak boleh kosong"
+                        password.length < 6 -> localError = "Password minimal 6 karakter"
+                        password != confirmPassword -> localError = "Password tidak sama"
+                        else -> {
+                            localError = null
+                            onConfirm(username, password, selectedRole)
                         }
-                ) { Text("Tambah") }
-            },
-            dismissButton = { TextButton(onClick = onDismiss) { Text("Batal") } }
+                    }
+                }
+            ) { Text("Tambah") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Batal") } }
     )
 }

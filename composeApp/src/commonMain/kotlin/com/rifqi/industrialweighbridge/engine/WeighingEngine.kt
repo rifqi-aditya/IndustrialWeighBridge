@@ -2,6 +2,9 @@ package com.rifqi.industrialweighbridge.engine
 
 import com.rifqi.industrialweighbridge.domain.repository.TransactionRepository
 import com.rifqi.industrialweighbridge.domain.utils.TicketGenerator
+import com.rifqi.industrialweighbridge.infrastructure.AuditAction
+import com.rifqi.industrialweighbridge.infrastructure.AuditLogger
+import com.rifqi.industrialweighbridge.infrastructure.EntityType
 import kotlin.math.abs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -9,6 +12,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 /**
  * Core Weighing Engine - The central controller for all weighing operations.
@@ -25,6 +29,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * - Determines weight role (Gross/Tare) based on transaction context
  * - Calculates Net Weight
  * - Orchestrates Data Layer and Infrastructure Layer interactions
+ * - Logs all weighing operations for audit trail
  *
  * Constraints:
  * - No other module can modify transaction state
@@ -33,7 +38,11 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 class WeighingEngine(
     private val transactionRepository: TransactionRepository,
-    private val stabilityConfig: StabilityConfig = StabilityConfig()
+    private val stabilityConfig: StabilityConfig = StabilityConfig(),
+    private val auditLogger: AuditLogger,
+    private val getCurrentUsername: () -> String = {
+        "system"
+    } // Callback to get current username
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -96,9 +105,27 @@ class WeighingEngine(
      * and be logged.
      */
     fun setManualMode(enabled: Boolean) {
+        val username = getCurrentUsername()
         _isManualMode.value = enabled
         stabilityDetector.reset()
         _isStable.value = false
+
+        // Log manual mode change
+        scope.launch {
+            if (enabled) {
+                auditLogger.log(
+                    action = AuditAction.MANUAL_MODE_ENABLED,
+                    username = username,
+                    description = "Manual weighing mode enabled by '$username'"
+                )
+            } else {
+                auditLogger.log(
+                    action = AuditAction.MANUAL_MODE_DISABLED,
+                    username = username,
+                    description = "Manual weighing mode disabled by '$username'"
+                )
+            }
+        }
     }
 
     // === State Transitions ===
@@ -204,6 +231,7 @@ class WeighingEngine(
         }
 
         val weight = _currentWeight.value
+        val username = getCurrentUsername()
 
         // Validate minimum weight
         if (weight < stabilityConfig.minimumWeightKg) {
@@ -228,6 +256,19 @@ class WeighingEngine(
                 isManual = currentState.isManualMode,
                 transactionType = currentState.transactionType,
                 poDoNumber = currentState.poDoNumber
+            )
+
+            // Log weigh-in completion
+            val modeInfo = if (currentState.isManualMode) " (Manual)" else ""
+            auditLogger.log(
+                action = AuditAction.WEIGH_IN_COMPLETED,
+                username = username,
+                description =
+                    "Weigh-in completed$modeInfo: Ticket $ticketNumber, Weight: $weight kg",
+                entityType = EntityType.TRANSACTION.name,
+                entityId = ticketNumber,
+                details =
+                    """{"weight": $weight, "isManual": ${currentState.isManualMode}, "transactionType": "${currentState.transactionType}"}"""
             )
 
             // Reset to Idle
@@ -267,6 +308,7 @@ class WeighingEngine(
 
         val secondWeight = _currentWeight.value
         val firstWeight = currentState.firstWeight
+        val username = getCurrentUsername()
 
         // Validate minimum weight
         if (secondWeight < stabilityConfig.minimumWeightKg) {
@@ -323,6 +365,19 @@ class WeighingEngine(
                     isManualEntry = currentState.isManualMode
                 )
 
+            // Log weigh-out completion
+            val modeInfo = if (currentState.isManualMode) " (Manual)" else ""
+            auditLogger.log(
+                action = AuditAction.WEIGH_OUT_COMPLETED,
+                username = username,
+                description =
+                    "Weigh-out completed$modeInfo: Ticket ${currentState.ticketNumber}, Gross: $grossWeight kg, Tare: $tareWeight kg, Net: $netWeight kg",
+                entityType = EntityType.TRANSACTION.name,
+                entityId = currentState.ticketNumber,
+                details =
+                    """{"grossWeight": $grossWeight, "tareWeight": $tareWeight, "netWeight": $netWeight, "isManual": ${currentState.isManualMode}, "transactionType": "${currentState.transactionType}"}"""
+            )
+
             // Transition to Completed state
             _state.value =
                 WeighingState.Completed(
@@ -345,6 +400,39 @@ class WeighingEngine(
 
     /** Cancels the current operation and returns to Idle. */
     fun cancelOperation() {
+        val currentState = _state.value
+        val username = getCurrentUsername()
+
+        // Log cancellation if in active weighing state
+        when (currentState) {
+            is WeighingState.WeighingIn -> {
+                scope.launch {
+                    auditLogger.log(
+                        action = AuditAction.TRANSACTION_CANCELLED,
+                        username = username,
+                        description = "Weigh-in operation cancelled by '$username'"
+                    )
+                }
+            }
+
+            is WeighingState.WeighingOut -> {
+                scope.launch {
+                    auditLogger.log(
+                        action = AuditAction.TRANSACTION_CANCELLED,
+                        username = username,
+                        description =
+                            "Weigh-out operation cancelled for ticket ${currentState.ticketNumber} by '$username'",
+                        entityType = EntityType.TRANSACTION.name,
+                        entityId = currentState.ticketNumber
+                    )
+                }
+            }
+
+            else -> {
+                /* No logging for other states */
+            }
+        }
+
         _state.value = WeighingState.Idle
         stabilityDetector.reset()
         _isStable.value = false
